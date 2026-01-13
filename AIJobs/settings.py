@@ -26,12 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x@uvq+=!n4*j*hu$6*w_mymvd$mw$1#55da1#=orhp+g!0pk67'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-x@uvq+=!n4*j*hu$6*w_mymvd$mw$1#55da1#=orhp+g!0pk67')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['arhythmically-unciliated-danna.ngrok-free.dev', 'bibletrivia.pythonanywhere.com', '127.0.0.1']
+# Parse ALLOWED_HOSTS from environment variable, fallback to default
+allowed_hosts = os.environ.get('ALLOWED_HOSTS', '127.0.0.1')
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts.split(',')]
 
 
 # Application definition
@@ -92,12 +94,31 @@ WSGI_APPLICATION = 'AIJobs.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+if os.environ.get('ENVIRONMENT') == 'PROD':
+    # Production database (MySQL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            }
+        }
     }
-}
+else:
+    # Development database (SQLite)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -150,15 +171,33 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'kevingitundu@gmail.com'
+if os.environ.get('ENVIRONMENT') == 'PROD':
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@example.com'
 
 # AI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
+# M-Pesa Configuration
+MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
+MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET')
+MPESA_PAYBILL = os.environ.get('MPESA_PAYBILL')
+MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE')
+MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
+MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')  # sandbox or production
+MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL')
 
 
-SITE_ID = 1
+
+SITE_ID = int(os.environ.get('SITE_ID', '1'))
 
 # Allauth settings
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
