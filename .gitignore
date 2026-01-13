@@ -7,3 +7,5 @@ venv/
 *.pyo
 *.sqlite3
 *.json
+staticfiles/
+media/
