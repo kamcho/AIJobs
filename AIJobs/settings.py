@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-x@uvq+=!n4*j*hu$6*w_mymvd$mw$1#55da1#=orhp+g!0pk67
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['arhythmically-unciliated-danna.ngrok-free.dev', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['arhythmically-unciliated-danna.ngrok-free.dev', 'bibletrivia.pythonanywhere.com', '127.0.0.1']
 
 
 # Application definition
