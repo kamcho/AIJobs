@@ -1,0 +1,9 @@
+# Ignore all files in the venv directory
+venv/
+.env
+*migrations/
+*__pycache__
+*.pyc
+*.pyo
+
+*.json

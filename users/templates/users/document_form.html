@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Document - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 500px;
+        margin: 40px auto;
+        padding: 40px;
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-header {
+        margin-bottom: 32px;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: white;
+        font-family: inherit;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .submit-group {
+        margin-top: 32px;
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="container">
+    <div class="form-container">
+        <div class="form-header">
+            <h1 style="font-family: var(--font-heading); font-size: 2rem;">Upload Document</h1>
+            <p style="color: var(--text-muted);">Share your CV or professional certificates.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.document_type.id_for_label }}">Document Type</label>
+                {{ form.document_type }}
+                {% if form.document_type.errors %}
+                <div style="color: #ef4444; font-size: 0.85rem; margin-top: 4px;">{{ form.document_type.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.file.id_for_label }}">Select File</label>
+                <div class="file-input-wrapper">
+                    {{ form.file }}
+                </div>
+                {% if form.file.errors %}
+                <div style="color: #ef4444; font-size: 0.85rem; margin-top: 4px;">{{ form.file.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="submit-group">
+                <a href="{% url 'document_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Upload Now</button>
+            </div>
+        </form>
+    </div>
+</main>
+{% endblock %}

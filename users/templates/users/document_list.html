@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+
+{% block title %}My Documents - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .manage-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px;
+    }
+
+    .manage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .doc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .doc-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        transition: all 0.2s;
+    }
+
+    .doc-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .doc-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+
+    .doc-info h3 {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+    }
+
+    .doc-meta {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+
+    .doc-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-text {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-text:hover {
+        text-decoration: underline;
+    }
+
+    .btn-delete {
+        color: #ef4444;
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px;
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px dashed var(--border-color);
+    }
+
+    .score-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        margin-top: 8px;
+    }
+
+    .score-badge.low {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .score-badge.mid {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: var(--bg-card);
+        width: 100%;
+        max-width: 800px;
+        max-height: 90vh;
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: modalSlide 0.3s ease-out;
+    }
+
+    @keyframes modalSlide {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+        color: var(--text-main);
+    }
+
+    .modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .analysis-section {
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-heading);
+    }
+
+    .score-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .score-card {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+    }
+
+    .score-card .val {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+        font-family: var(--font-heading);
+    }
+
+    .score-card .label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .feedback-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .feedback-item {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        border-left: 3px solid var(--primary);
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .feedback-item.missing {
+        border-left-color: #ef4444;
+    }
+
+    .feedback-item.missing::before {
+        content: "✕";
+        color: #ef4444;
+        font-weight: 700;
+    }
+
+    .feedback-item.suggest::before {
+        content: "→";
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .modal-footer {
+        padding: 20px 24px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="manage-container">
+    <div class="manage-header">
+        <div>
+            <h1 style="font-family: var(--font-heading); font-size: 2rem;">My Documents</h1>
+            <p style="color: var(--text-muted);">Manage your CVs, certifications, and other useful documents.</p>
+        </div>
+        <a href="{% url 'document_upload' %}" class="btn btn-primary">Upload Document</a>
+    </div>
+
+    <div class="doc-grid">
+        {% if documents %}
+        {% for doc in documents %}
+        <div class="doc-card">
+            <div class="doc-icon">
+                {% if 'PDF' in doc.document_type.name %}
+                📄
+                {% elif 'CV' in doc.document_type.name %}
+                💼
+                {% else %}
+                📜
+                {% endif %}
+            </div>
+            <div class="doc-info">
+                <h3>{{ doc.document_type.name }}</h3>
+                <div class="doc-meta">
+                    Uploaded on {{ doc.uploaded_at|date:"M d, Y" }}
+                    {% if doc.ai_score is not None %}
+                    <div class="score-badge {% if doc.ai_score < 40 %}low{% elif doc.ai_score < 70 %}mid{% endif %}">
+                        <span style="font-size: 1rem;">🎯</span> AI Score: {{ doc.ai_score }}/100
+                    </div>
+                    {% endif %}
+                    {% if doc.extracted_content %}
+                    <br>
+                    <span style="font-style: italic; opacity: 0.8;">
+                        {{ doc.extracted_content|truncatechars:30 }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="doc-actions">
+                <a href="{% url 'document_detail' doc.pk %}" class="btn-text">View Details</a>
+                <a href="{% url 'document_delete' doc.pk %}" class="btn-delete">Delete</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div style="font-size: 3rem; margin-bottom: 20px;">📂</div>
+            <h2>No documents uploaded yet</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Upload your CV and certifications to complete your
+                professional profile.</p>
+            <a href="{% url 'document_upload' %}" class="btn btn-primary">Upload Your First Document</a>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+<!-- Modal for Extracted Data -->
+<div class="modal-overlay" id="dataModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Extracted Content</h2>
+            <button class="modal-close" onclick="closeModal('dataModal')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" id="modalBody" style="white-space: pre-wrap;">
+            <!-- Content will be injected here -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('dataModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Detailed Analysis -->
+<div class="modal-overlay" id="analysisModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">AI CV Analysis Report</h2>
+            <button class="modal-close" onclick="closeModal('analysisModal')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="score-grid">
+                <div class="score-card">
+                    <span class="val" id="totalScore">0/100</span>
+                    <span class="label">Total Score</span>
+                </div>
+                <div class="score-card">
+                    <span class="val" id="profScore">0/20</span>
+                    <span class="label">Professionalism</span>
+                </div>
+                <div class="score-card">
+                    <span class="val" id="relScore">0/40</span>
+                    <span class="label">Relevance</span>
+                </div>
+                <div class="score-card">
+                    <span class="val" id="expScore">0/30</span>
+                    <span class="label">Experience</span>
+                </div>
+                <div class="score-card">
+                    <span class="val" id="eduScore">0/10</span>
+                    <span class="label">Education</span>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h3 class="section-title">⚠️ Probable Missing Sections</h3>
+                <div id="missingList" class="feedback-list">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h3 class="section-title">💡 How to Improve</h3>
+                <div id="suggestList" class="feedback-list">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('analysisModal')">Close Report</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Keeping simple modal logic just in case for future use or other components
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close on click outside
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+            closeModal(e.target.id);
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal-overlay[style*="display: flex"]');
+            openModals.forEach(m => closeModal(m.id));
+        }
+    });
+</script>
+{% endblock %}

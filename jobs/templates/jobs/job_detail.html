@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .job-header-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-main {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+    }
+
+    .logo-large {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+
+    .header-info h1 {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+
+    .header-company {
+        font-size: 1.1rem;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .job-content-grid {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 32px;
+    }
+
+    .main-content {
+        background: var(--bg-card);
+        border-radius: 24px;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--text-main);
+    }
+
+    .description {
+        color: var(--text-muted);
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin-bottom: 40px;
+        white-space: pre-wrap;
+    }
+
+    .requirement-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .requirement-item {
+        display: flex;
+        gap: 12px;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+        font-size: 1rem;
+    }
+
+    .check-bullet {
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+
+    /* Sidebar Info */
+    .sidebar-info {
+        background: var(--bg-card);
+        border-radius: 24px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        height: fit-content;
+    }
+
+    .info-row {
+        margin-bottom: 20px;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-main);
+        font-weight: 500;
+    }
+
+    .btn-apply {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 12px;
+        display: block;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .btn-apply:hover {
+        background: #2563eb;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .expire-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="detail-container">
+    <a href="{% url 'job_list' %}" class="back-link">
+        <span>←</span> Back to Job Listings
+    </a>
+
+    <div class="job-header-card">
+        <div class="header-main">
+            <div class="logo-large">
+                {{ job.company|slice:":1" }}
+            </div>
+            <div class="header-info">
+                <h1>{{ job.title }}</h1>
+                <span class="header-company">{{ job.company }}</span>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <span style="color: var(--text-muted); font-size: 0.85rem; display: block; margin-bottom: 8px;">
+                Posted {{ job.posted_at|date:"M d, Y" }}
+            </span>
+            <span class="job-tag"
+                style="background: rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem;">
+                {{ job.category.name }}
+            </span>
+        </div>
+    </div>
+
+    <div class="job-content-grid">
+        <div class="main-content">
+            <h2 class="section-title">About the Role</h2>
+            <div class="description">{{ job.description }}</div>
+
+            <h2 class="section-title">Key Requirements</h2>
+            <ul class="requirement-list">
+                {% for req in job.requirements.all %}
+                <li class="requirement-item">
+                    <span class="check-bullet">✓</span>
+                    {{ req.description }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <aside class="sidebar-info">
+            <div class="info-row">
+                <span class="info-label">Location</span>
+                <span class="info-value">📍 {{ job.location }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Education</span>
+                <span class="info-value">🎓 {{ job.education_level_required }}</span>
+            </div>
+            {% if job.experience_required_years %}
+            <div class="info-row">
+                <span class="info-label">Experience</span>
+                <span class="info-value">⏳ {{ job.experience_required_years }}+ years</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Job Type</span>
+                <span class="info-value">💼 Full-time</span>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 24px 0;">
+
+            <a href="#" class="btn-apply">Quick Apply with AI</a>
+
+            {% if job.expiry_date %}
+            <div class="expire-badge">
+                Expires on {{ job.expiry_date|date:"M d, Y" }}
+            </div>
+            {% endif %}
+        </aside>
+    </div>
+</main>
+{% endblock %}

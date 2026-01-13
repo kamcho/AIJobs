@@ -1,0 +1,26 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('signup/', views.signup, name='signup'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('profile/', views.profile_detail, name='profile_detail'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('experience/', views.experience_list, name='experience_list'),
+    path('experience/add/', views.experience_add, name='experience_add'),
+    path('experience/edit/<int:pk>/', views.experience_edit, name='experience_edit'),
+    path('experience/delete/<int:pk>/', views.experience_delete, name='experience_delete'),
+    path('education/', views.education_list, name='education_list'),
+    path('education/add/', views.education_add, name='education_add'),
+    path('education/edit/<int:pk>/', views.education_edit, name='education_edit'),
+    path('education/delete/<int:pk>/', views.education_delete, name='education_delete'),
+    path('skills/', views.skill_list, name='skill_list'),
+    path('skills/add/', views.skill_add, name='skill_add'),
+    path('skills/edit/<int:pk>/', views.skill_edit, name='skill_edit'),
+    path('skills/delete/<int:pk>/', views.skill_delete, name='skill_delete'),
+    path('documents/', views.document_list, name='document_list'),
+    path('documents/upload/', views.document_add, name='document_upload'),
+    path('documents/<int:pk>/', views.document_detail, name='document_detail'),
+    path('documents/delete/<int:pk>/', views.document_delete, name='document_delete'),
+]

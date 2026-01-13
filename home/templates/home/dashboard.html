@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Specific Styles */
+    .main-layout {
+        padding: 40px 0;
+    }
+
+    .welcome-section {
+        margin-bottom: 32px;
+    }
+
+    .welcome-title {
+        font-family: var(--font-heading);
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .welcome-subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 32px;
+    }
+
+    .card {
+        background-color: var(--bg-card);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 24px;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .title-icon {
+        width: 36px;
+        height: 36px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+    }
+
+    .completion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .completion-status {
+        color: var(--success);
+    }
+
+    .progress-container {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: var(--primary);
+        transition: width 0.5s ease-in-out;
+    }
+
+    .completion-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .completion-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+    }
+
+    .item-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .check-icon {
+        color: var(--success);
+    }
+
+    .update-link {
+        color: var(--primary-light);
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+
+    .profile-section-block {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .experience-item {
+        display: flex;
+        gap: 16px;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .experience-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .item-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .item-content h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .item-content p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .badge-small {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-light);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .match-item {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
+    .match-info h5 {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .match-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-top: 8px;
+    }
+
+    .status-applied {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-light);
+    }
+
+    .status-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .btn-view-all {
+        display: block;
+        text-align: center;
+        padding: 12px;
+        color: var(--primary-light);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-top: 1px solid var(--border-color);
+        margin-top: 8px;
+    }
+
+    .skill-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .proficiency-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .Beginner {
+        background-color: #94a3b8;
+    }
+
+    .Intermediate {
+        background-color: #3b82f6;
+    }
+
+    .Expert {
+        background-color: #10b981;
+    }
+
+    .score-badge-card {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .score-display {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 3px solid var(--primary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .score-display .num {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--primary-light);
+        line-height: 1;
+    }
+
+    .score-display .lbl {
+        font-size: 0.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="container main-layout">
+    <section class="welcome-section">
+        <h1 class="welcome-title">Welcome back, {% if profile.full_name %}{{ profile.full_name }}{% else %}{{ user.email
+            }}{% endif %}!</h1>
+        <p class="welcome-subtitle">Here's what's happening with your account today.</p>
+    </section>
+
+    <div class="dashboard-grid">
+        <!-- Left Column -->
+        <div class="main-column">
+            <!-- Recommended Jobs -->
+            {% if recommended_jobs %}
+            <div class="card"
+                style="border-color: rgba(16, 185, 129, 0.2); background: linear-gradient(to bottom right, var(--bg-card), rgba(16, 185, 129, 0.05));">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="title-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        Recommended for You
+                    </div>
+                    <a href="{% url 'job_list' %}" class="update-link" style="color: var(--success);">See All matches
+                        ›</a>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                    {% for job in recommended_jobs %}
+                    <div class="match-item"
+                        style="margin-bottom: 0; background: rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <h4 style="font-size: 0.95rem; font-weight: 700;">{{ job.title }}</h4>
+                            <span class="badge-small"
+                                style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.1); color: var(--success);">{{ job.category.name }}</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">{{ job.company }}
+                            • {{ job.location }}</p>
+                        <a href="{% url 'job_detail' job.pk %}" class="btn btn-secondary"
+                            style="padding: 6px 12px; font-size: 0.8rem; width: 100%; text-align: center; border-radius: 8px;">View
+                            Details</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Professional Profile -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="title-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <polyline points="17 11 19 13 23 9"></polyline>
+                            </svg>
+                        </div>
+                        My Professional Profile
+                    </div>
+                    <span class="badge-small">{{ user.role }}</span>
+                </div>
+
+                <!-- Work Experience -->
+                <div class="profile-section-block">
+                    <div class="section-subtitle">
+                        <span>Work Experience</span>
+                        <span style="color: var(--primary);">{{ work_experiences.count }} entries</span>
+                    </div>
+                    {% for exp in work_experiences %}
+                    <div class="experience-item">
+                        <div class="item-icon">💼</div>
+                        <div class="item-content">
+                            <h4>{{ exp.job_title }}</h4>
+                            <p>{{ exp.company_name }} • {{ exp.start_date|date:"M Y" }} - 
+                              {% if  exp.is_current%}Present{% else %}{{ exp.end_date|date:"M Y" }}{% endif %}</p>
+                            {% if exp.location %}<p style="font-size: 0.75rem;">📍 {{ exp.location }}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">No work experience added.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Education -->
+                <div class="profile-section-block">
+                    <div class="section-subtitle">
+                        <span>Education</span>
+                    </div>
+                    {% for edu in educations %}
+                    <div class="experience-item">
+                        <div class="item-icon">🎓</div>
+                        <div class="item-content">
+                            <h4>{{ edu.level }} in {{ edu.field_of_study|default:"General Studies" }}</h4>
+                            <p>{{ edu.institution }} • Graduated {{ edu.end_date|date:"Y" }}</p>
+                            {% if edu.grade %}<p style="font-size: 0.75rem;">⭐ Grade: {{ edu.grade }}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">No education entries added.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Interested Industries -->
+                <div class="profile-section-block">
+                    <div class="section-subtitle">
+                        <span>Interested Industries</span>
+                        <a href="{% url 'profile_edit' %}" class="update-link" style="font-size: 0.75rem;">Update ›</a>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        {% for cat in profile.preferred_categories.all %}
+                        <div class="skill-tag"
+                            style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.1);">
+                            {{ cat.name }}
+                        </div>
+                        {% empty %}
+                        <p style="color: var(--text-muted); font-size: 0.8rem;">No preferences set. <a
+                                href="{% url 'profile_edit' %}" style="color: var(--primary-light);">Add matches ›</a>
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <aside class="sidebar-column">
+            <!-- Profile Completion (Sidebar) -->
+            <div class="card sidebar-card" style="padding: 20px;">
+                <div class="completion-header">
+                    <span style="font-size: 0.85rem;">Profile Completion</span>
+                    <span class="completion-status" style="font-size: 0.85rem;">{{ completion_percentage }}%</span>
+                </div>
+                <div class="progress-container" style="height: 6px; margin-bottom: 16px;">
+                    <div class="progress-bar" style="width: {{ completion_percentage }}%;"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
+                        <span class="item-label"><span class="check-icon">{% if profile.full_name %}✓{% else %}○{% endif%}</span> Personal</span>
+                        <a href="{% url 'profile_edit' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
+                    </div>
+                    <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
+                        <span class="item-label"><span class="check-icon">{% if educations %}✓{% else %}○{% endif%}</span> Education</span>
+                        <a href="{% url 'education_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
+                    </div>
+                    <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
+                        <span class="item-label"><span class="check-icon">{% if work_experiences %}✓{% else %}○{% endif%}</span> Experience</span>
+                        <a href="{% url 'experience_list' %}" class="update-link" style="font-size: 0.7rem;">Update
+                            ›</a>
+                    </div>
+                    <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
+                        <span class="item-label"><span class="check-icon">{% if skills %}✓{% else %}○{% endif%}</span>
+                            Skills</span>
+                        <a href="{% url 'skill_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
+                    </div>
+                    <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
+                        <span class="item-label"><span class="check-icon">{% if all_documents %}✓{% else %}○{% endif %}</span> Documents</span>
+                        <a href="{% url 'document_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI CV Score -->
+            {% if cv_score is not None %}
+            <div class="card score-badge-card">
+                <div class="score-display">
+                    <span class="num">{{ cv_score }}</span>
+                    <span class="lbl">AI SCORE</span>
+                </div>
+                <div class="score-info">
+                    <h3 style="font-size: 1rem; margin-bottom: 4px;">CV AI Rating</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                            {% if cv_score >= 80 %}Excellent match for roles{% elif cv_score >= 60 %}Strong professional
+                            profile{% else %}Optimization recommended{% endif %}
+                        </p>
+                    <a href="{% url 'document_detail' latest_cv.pk %}" class="update-link"
+                        style="font-weight: 700;">View Full Analysis ›</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Applications -->
+            <div class="card sidebar-card">
+                <h3 class="section-title">Recent Applications</h3>
+                {% for app in applications|slice:":3" %}
+                <div class="match-item">
+                    <div class="match-info">
+                        <h5>{{ app.job.title }}</h5>
+                        <div class="match-meta">{{ app.job.company }}</div>
+                        <span
+                            class="status-pill status-{% if app.status == 'Applied' %}success{% else %}applied{% endif %}">
+                            {{ app.status }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">No recent applications.</p>
+                {% endfor %}
+                <a href="#" class="btn-view-all">View All Applications</a>
+            </div>
+
+            <!-- Documents -->
+            <div class="card sidebar-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 class="section-title" style="margin-bottom: 0;">Documents</h3>
+                    <a href="{% url 'document_list' %}" class="update-link" style="font-size: 0.75rem;">Update ›</a>
+                </div>
+                {% for doc in all_documents %}
+                <div class="match-item" style="display: flex; align-items: center; gap: 12px; padding: 12px;">
+                    <div style="font-size: 1.25rem;">
+                        {% if 'PDF' in doc.document_type.name %}📄{% elif 'CV' in doc.document_type.name %}💼{% else%}📜{% endif %}
+                    </div>
+                    <div class="match-info">
+                        <h5 style="font-size: 0.85rem; margin-bottom: 0;">{{ doc.document_type.name }}</h5>
+                        <div class="match-meta" style="font-size: 0.75rem;">{{ doc.uploaded_at|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">No documents uploaded.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card sidebar-card">
+                <h3 class="section-title">Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="{% url 'profile_edit' %}" class="nav-link" style="color: var(--primary-light);">Update
+                        Profile</a>
+                    <a href="{% url 'document_upload' %}" class="nav-link" style="color: var(--primary-light);">Upload
+                        new document</a>
+                    <a href="{% url 'job_list' %}" class="nav-link" style="color: var(--primary-light);">Browse Jobs</a>
+                </div>
+            </div>
+        </aside>
+    </div>
+</main>
+{% endblock %}

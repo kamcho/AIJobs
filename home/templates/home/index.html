@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}FindAJob - AI Powered Job Automation{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero section needs a bit of adjustment for the new header height if necessary */
+    .hero {
+        padding-top: 60px;
+        /* Adjusted to balance the sticky header */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main>
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="hero-text">
+                <div class="badge">
+                    <span class="badge-icon">✨</span>
+                    <span class="badge-text">New: Auto-Recall Analysis</span>
+                </div>
+                <h1 class="hero-title">
+                    Stop Applying to Jobs <span class="gradient-text">Manually.</span>
+                </h1>
+                <p class="hero-description">
+                    Upload your CV once. Our autonomous AI agent scans, customizes, and applies to thousands of
+                    relevant engineering jobs for you—while you sleep.
+                </p>
+                <div class="hero-cta-group">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                        Go to Dashboard
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.5 4.5L21 12L13.5 19.5" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M21 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'signup' %}" class="btn btn-primary">
+                        Upload CV & Start Automation
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.5 4.5L21 12L13.5 19.5" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M21 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    {% endif %}
+                    <div class="trust-indicator">
+                        <div class="avatars">
+                            <div class="avatar" style="background-color: #FF5733;">AD</div>
+                            <div class="avatar" style="background-color: #33FF57;">MK</div>
+                            <div class="avatar" style="background-color: #3357FF;">JL</div>
+                        </div>
+                        <span class="trust-text">Trusted by 1,200+ job seekers</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="glass-card main-card">
+                    <div class="card-header">
+                        <div class="status-indicator">
+                            <span class="status-dot"></span>
+                            <span class="status-text">AI Agent Active</span>
+                        </div>
+                        <span class="mono-text">ID: 8824-X</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-row">
+                            <div class="activity-icon success">✓</div>
+                            <div class="activity-details">
+                                <span class="activity-title">Applied to Senior Backend Eng.</span>
+                                <span class="activity-meta">Google • 2m ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-row">
+                            <div class="activity-icon success">✓</div>
+                            <div class="activity-details">
+                                <span class="activity-title">Applied to Full Stack Dev</span>
+                                <span class="activity-meta">Netflix • 5m ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-row">
+                            <div class="activity-icon processing">
+                                <span class="spinner"></span>
+                            </div>
+                            <div class="activity-details">
+                                <span class="activity-title">Analyzing Job Description...</span>
+                                <span class="activity-meta">Amazon • Now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="floating-badge badge-1">
+                        <span class="stat-value">247</span>
+                        <span class="stat-label">Applications Sent today</span>
+                    </div>
+                </div>
+                <div class="glow-effect"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Built for the Modern <span class="gradient-text">Engineer.</span></h2>
+                <p class="section-subtitle">Our AI agent handles the heavy lifting, from parsing complex resumes to
+                    managing intricate application flows.</p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3>AI Resume Parsing</h3>
+                    <p>Our deep learning models extract and structure data from your CV with 99% accuracy, ensuring no
+                        detail is missed by recruiters.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3>Autonomous Applications</h3>
+                    <p>The agent customizes your cover letter for every role and submits applications directly through
+                        company portals and job boards.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </div>
+                    <h3>Smart Match Insights</h3>
+                    <p>Get instant feedback on how well your profile aligns with job requirements and receive actionable
+                        tips to improve your match score.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How It <span class="gradient-text">Works.</span></h2>
+                <p class="section-subtitle">Four simple steps to automate your job search and land your next role faster
+                    than ever.</p>
+            </div>
+
+            <div class="steps-container">
+                <!-- Step 1 -->
+                <div class="step-item">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h3>Upload CV</h3>
+                        <p>Upload your resume in PDF or Word format. Our AI will analyze your experience and skills
+                            instantly.</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-item">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h3>Set Preferences</h3>
+                        <p>Define your target roles, industries, and location preferences to guide the AI agent's
+                            search.</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-item">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h3>AI Match & Scan</h3>
+                        <p>Our agent scans thousands of jobs daily, matching your profile against every requirement in
+                            real-time.</p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-item">
+                    <div class="step-number">04</div>
+                    <div class="step-content">
+                        <h3>Auto-Apply</h3>
+                        <p>The agent customizes your resume for each role and submits the application automatically.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Success <span class="gradient-text">Stories.</span></h2>
+                <p class="section-subtitle">Join thousands of engineers who simplified their job search and landed at
+                    top tech companies.</p>
+            </div>
+
+            <div class="testimonials-grid">
+                <!-- Testimonial 1 -->
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <div class="quote-icon">"</div>
+                    <p class="testimonial-content">The AI agent handled everything. I woke up to three interview
+                        requests in my first week. It's like having a personal recruitment assistant that never sleeps.
+                    </p>
+                    <div class="author-info">
+                        <div class="author-avatar" style="background: #3b82f6;">SR</div>
+                        <div class="author-details">
+                            <h4>Sarah Rodriguez</h4>
+                            <p>Senior Backend Engineer @ Stripe</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <div class="quote-icon">"</div>
+                    <p class="testimonial-content">As a Full Stack dev, I was overwhelmed by applications. FindAJob.ai
+                        scanned perfectly and only applied to roles where I was a 90%+ match. Total game changer.</p>
+                    <div class="author-info">
+                        <div class="author-avatar" style="background: #10b981;">MK</div>
+                        <div class="author-details">
+                            <h4>Marcus Knight</h4>
+                            <p>Full Stack Developer @ Vercel</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <div class="quote-icon">"</div>
+                    <p class="testimonial-content">The CV analysis report gave me exactly what I needed to fix. Once
+                        updated, the agent landed me a role at my dream company within 14 days.</p>
+                    <div class="author-info">
+                        <div class="author-avatar" style="background: #6366f1;">AL</div>
+                        <div class="author-details">
+                            <h4>Aisha Lawson</h4>
+                            <p>DevOps Lead @ Atlassian</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+</main>
+{% endblock %}
