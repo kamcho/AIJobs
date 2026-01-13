@@ -7,6 +7,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_detail, name='profile_detail'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('profile/preferences/', views.job_preference_edit, name='job_preference_edit'),
     path('experience/', views.experience_list, name='experience_list'),
     path('experience/add/', views.experience_add, name='experience_add'),
     path('experience/edit/<int:pk>/', views.experience_edit, name='experience_edit'),
@@ -23,4 +24,6 @@ urlpatterns = [
     path('documents/upload/', views.document_add, name='document_upload'),
     path('documents/<int:pk>/', views.document_detail, name='document_detail'),
     path('documents/delete/<int:pk>/', views.document_delete, name='document_delete'),
+    path('subscription/', views.subscription_page, name='subscription_page'),
+    path('payments/', views.payment_history, name='payment_history'),
 ]

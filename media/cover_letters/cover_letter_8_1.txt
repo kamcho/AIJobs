@@ -1,0 +1,23 @@
+Kevin Gitundu  
+kevingitundu@gmail.com  
+[Date]  
+  
+Hiring Manager  
+Nexus AI Technologies  
+Nairobi, Kenya  
+
+Dear Hiring Manager,
+
+I am writing to express my interest in the Senior Software Engineer position at Nexus AI Technologies as advertised. With a strong background in Python and Django, coupled with extensive experience in developing scalable backend systems, I am excited about the opportunity to contribute to your innovative team and further advance the tech ecosystem across Africa.
+
+With over four years of professional experience in backend development, I have honed my skills in architecting and implementing robust services using Python and Django. My previous roles have equipped me with the expertise to design efficient database schemas and optimize query performance, ensuring high-quality and responsive applications. I am particularly drawn to the opportunity at Nexus AI Technologies because of your commitment to impacting the logistics and fintech sectors — areas where I am eager to make a substantial contribution.
+
+In addition to backend development, I have a solid understanding of modern JavaScript, CSS, and React, which allows me to seamlessly integrate frontend and backend solutions. My experience with RESTful API design and implementation further complements my skill set, enabling me to deliver cohesive and scalable software solutions. I am also proficient in deploying and managing infrastructure using AWS EC2, and I am well-versed in containerization technologies such as Docker and Kubernetes, ensuring that applications are not only functional but also secure and efficient.
+
+Mentoring junior developers and contributing to architectural decisions are aspects of the role that align with my professional goals. I am enthusiastic about the prospect of collaborating with cross-functional teams at Nexus AI Technologies to deliver impactful software solutions that serve thousands of users.
+
+Thank you for considering my application. I am looking forward to the opportunity to discuss how my skills and experiences align with the goals of Nexus AI Technologies.
+
+Warm regards,
+
+Kevin Gitundu

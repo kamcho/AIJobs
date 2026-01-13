@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import MyUser, PersonalProfile, DocumentType, UserDocument, MySkill, WorkExperience, Education
+from .models import MyUser, PersonalProfile, DocumentType, UserDocument, MySkill, WorkExperience, Education, Subscription, MpesaTransaction
 
 @admin.register(MyUser)
 class MyUserAdmin(admin.ModelAdmin):
@@ -40,3 +40,16 @@ class EducationAdmin(admin.ModelAdmin):
     list_display = ('level', 'institution', 'user', 'start_date', 'end_date')
     list_filter = ('level', 'start_date')
     search_fields = ('institution', 'user__email', 'degree')
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'tier', 'is_active', 'start_date', 'expiry_date')
+    list_filter = ('tier', 'is_active')
+    search_fields = ('user__email',)
+
+@admin.register(MpesaTransaction)
+class MpesaTransactionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'phone_number', 'amount', 'status', 'mpesa_receipt_number', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('user__email', 'phone_number', 'checkout_request_id', 'mpesa_receipt_number')
+    readonly_fields = ('checkout_request_id', 'merchant_request_id')

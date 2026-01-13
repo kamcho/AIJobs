@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}Premium Subscription - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pricing-container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 0 20px;
+        text-align: center;
+    }
+
+    .pricing-header {
+        margin-bottom: 60px;
+    }
+
+    .pricing-title {
+        font-family: var(--font-heading);
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, var(--text-main) 0%, var(--primary-light) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .pricing-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 32px;
+        margin-top: 40px;
+    }
+
+    .pricing-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 32px;
+        padding: 48px 32px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-12px);
+        border-color: var(--primary);
+        box-shadow: 0 30px 60px -12px rgba(59, 130, 246, 0.15);
+    }
+
+    .pricing-card.popular {
+        border: 2px solid var(--primary);
+        background: linear-gradient(to bottom right, var(--bg-card), rgba(59, 130, 246, 0.05));
+    }
+
+    .popular-tag {
+        position: absolute;
+        top: 24px;
+        right: -32px;
+        background: var(--primary);
+        color: white;
+        padding: 4px 40px;
+        transform: rotate(45deg);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .plan-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-main);
+    }
+
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: var(--text-main);
+    }
+
+    .plan-price span {
+        font-size: 1rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 32px 0;
+        text-align: left;
+        flex-grow: 1;
+    }
+
+    .plan-features li {
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .feature-icon {
+        color: var(--success);
+        font-weight: 700;
+    }
+
+    .btn-select {
+        width: 100%;
+        padding: 16px;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.2s;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+        cursor: pointer;
+    }
+
+    .btn-select:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .current-plan-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+    }
+
+    .ultimate-card {
+        border-color: #8b5cf6;
+    }
+
+    .ultimate-card:hover {
+        border-color: #8b5cf6;
+    }
+
+    .ultimate-text {
+        color: #8b5cf6 !important;
+    }
+
+    .mpesa-input-group {
+        margin-top: 24px;
+        text-align: left;
+    }
+
+    .mpesa-label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .mpesa-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: var(--text-main);
+        font-family: var(--font-body);
+        font-size: 1rem;
+        transition: all 0.2s;
+        margin-bottom: 16px;
+    }
+
+    .mpesa-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .mpesa-logo {
+        height: 20px;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="pricing-container">
+    <div class="pricing-header">
+        {% if subscription %}
+        <div class="current-plan-badge">You are currently on the {{ subscription.tier }} Plan</div>
+        {% endif %}
+        <h1 class="pricing-title">Level Up Your Career</h1>
+        <p class="pricing-subtitle">Choose the plan that fits your ambition. From smart applications to full career
+            automation.</p>
+    </div>
+
+    <div class="pricing-grid">
+        <!-- Basic Plan -->
+        <div class="pricing-card {% if subscription.tier == 'Basic' %}popular{% endif %}">
+            <h3 class="plan-name">Basic</h3>
+            <div class="plan-price">200<span>/3 months</span></div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Perfect for getting started</p>
+
+            <ul class="plan-features">
+                <li><span class="feature-icon">✓</span> AI Cover Letter Generation</li>
+                <li><span class="feature-icon">✓</span> CV Analysis & Scoring</li>
+                <li><span class="feature-icon">✓</span> PDF/DOCX Document Export</li>
+                <li><span class="feature-icon">✓</span> Unlimited Job Browsing</li>
+            </ul>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mpesa-input-group">
+                    <label class="mpesa-label">M-Pesa Number</label>
+                    <input type="text" name="phone_number" class="mpesa-input" placeholder="e.g. 0712345678" required>
+                </div>
+                <input type="hidden" name="tier" value="Basic">
+                <button type="submit" class="btn-select">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" class="mpesa-logo"
+                        alt="M-Pesa">
+                    {% if subscription.tier == 'Basic' %}Renew Basic{% else %}Select Basic{% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="pricing-card {% if subscription.tier == 'Pro' or not subscription %}popular{% endif %}">
+            {% if not subscription or subscription.tier == 'Pro' %}<div class="popular-tag">Popular</div>{% endif %}
+            <h3 class="plan-name" style="color: var(--primary-light);">Pro</h3>
+            <div class="plan-price">500<span>/3 months</span></div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Accelerate your applications</p>
+
+            <ul class="plan-features">
+                <li><span class="feature-icon">✓</span> <strong>Everything in Basic</strong></li>
+                <li><span class="feature-icon">✓</span> <strong>Auto Job Application</strong></li>
+                <li><span class="feature-icon">✓</span> Priority AI Generation</li>
+                <li><span class="feature-icon">✓</span> Multi-CV Management</li>
+            </ul>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mpesa-input-group">
+                    <label class="mpesa-label">M-Pesa Number</label>
+                    <input type="text" name="phone_number" class="mpesa-input" placeholder="e.g. 0712345678" required>
+                </div>
+                <input type="hidden" name="tier" value="Pro">
+                <button type="submit" class="btn-select"
+                    style="{% if not subscription or subscription.tier != 'Pro' %}background: var(--primary); border-color: var(--primary); color: white;{% endif %}">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" class="mpesa-logo"
+                        alt="M-Pesa">
+                    {% if subscription.tier == 'Pro' %}Renew Pro{% else %}Get Started with Pro{% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Ultimate Plan -->
+        <div class="pricing-card ultimate-card {% if subscription.tier == 'Ultimate' %}popular{% endif %}">
+            <h3 class="plan-name ultimate-text">Ultimate</h3>
+            <div class="plan-price">1,500<span>/3 months</span></div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Total Career Automation</p>
+
+            <ul class="plan-features">
+                <li><span class="feature-icon">✓</span> <strong>Everything in Pro</strong></li>
+                <li><span class="feature-icon">✓</span> <strong>Inbox Reply Monitoring</strong></li>
+                <li><span class="feature-icon">✓</span> Personal Career Advisor AI</li>
+                <li><span class="feature-icon">✓</span> Direct Employer Networking</li>
+            </ul>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mpesa-input-group">
+                    <label class="mpesa-label">M-Pesa Number</label>
+                    <input type="text" name="phone_number" class="mpesa-input" placeholder="e.g. 0712345678" required>
+                </div>
+                <input type="hidden" name="tier" value="Ultimate">
+                <button type="submit" class="btn-select">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" class="mpesa-logo"
+                        alt="M-Pesa">
+                    {% if subscription.tier == 'Ultimate' %}Renew Ultimate{% else %}Go Ultimate{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

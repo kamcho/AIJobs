@@ -51,13 +51,13 @@ class PersonalProfile(models.Model):
     )
 
     user = models.OneToOneField(MyUser, on_delete=models.CASCADE, related_name='profile')
-    full_name = models.CharField(max_length=255)
-    phone_primary = models.CharField(max_length=15)
+    full_name = models.CharField(max_length=255, blank=True)
+    phone_primary = models.CharField(max_length=15, blank=True, null=True)
     phone_secondary = models.CharField(max_length=15, blank=True, null=True)
-    gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    city = models.CharField(max_length=100)
-    country = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     linkedin_url = models.URLField(blank=True, null=True)
     portfolio_url = models.URLField(blank=True, null=True)
@@ -163,3 +163,42 @@ class Education(models.Model):
 
     def __str__(self):
         return f"{self.level} at {self.institution} ({self.user.email})"
+
+class Subscription(models.Model):
+    TIER_CHOICES = (
+        ('Basic', 'Basic - 200/3 Months'),
+        ('Pro', 'Pro - 500/3 Months (Auto App)'),
+        ('Ultimate', 'Ultimate - 1500/3 Months (Inbox Reading)'),
+    )
+    
+    user = models.OneToOneField(MyUser, on_delete=models.CASCADE, related_name='subscription')
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='Basic')
+    is_active = models.BooleanField(default=True)
+    start_date = models.DateTimeField(auto_now_add=True)
+    expiry_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.tier} subscription for {self.user.email}"
+
+class MpesaTransaction(models.Model):
+    STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('Success', 'Success'),
+        ('Failed', 'Failed'),
+    )
+    
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='mpesa_transactions')
+    phone_number = models.CharField(max_length=15)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    checkout_request_id = models.CharField(max_length=100, unique=True)
+    merchant_request_id = models.CharField(max_length=100)
+    mpesa_receipt_number = models.CharField(max_length=50, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    result_code = models.IntegerField(blank=True, null=True)
+    result_description = models.TextField(blank=True, null=True)
+    subscription_tier = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.amount} - {self.status}"

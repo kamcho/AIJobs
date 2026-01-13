@@ -10,6 +10,27 @@ class JobCategory(models.Model):
     class Meta:
         verbose_name_plural = "Job Categories"
 
+class Company(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    
+    primary_phone = models.CharField(max_length=20, blank=True, null=True)
+    secondary_phone = models.CharField(max_length=20, blank=True, null=True)
+    primary_email = models.EmailField(blank=True, null=True)
+    secondary_email = models.EmailField(blank=True, null=True)
+    
+    founded_in = models.IntegerField(blank=True, null=True, help_text="Year the company was founded")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Companies"
+
 class JobListing(models.Model):
     LEVEL_CHOICES = (
         ('Primary', 'Primary'),
@@ -21,12 +42,14 @@ class JobListing(models.Model):
 
     title = models.CharField(max_length=255)
     category = models.ForeignKey(JobCategory, on_delete=models.CASCADE, related_name='jobs')
-    company = models.CharField(max_length=255)
+    company = models.CharField(max_length=255) # Deprecated, keeping for migration
+    company_profile = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, blank=True, related_name='jobs')
     description = models.TextField()
     location = models.CharField(max_length=255)
     url = models.URLField()
     education_level_required = models.CharField(max_length=50, choices=LEVEL_CHOICES, default='None')
     experience_required_years = models.IntegerField(blank=True, null=True)
+    employer_email = models.EmailField(blank=True, null=True, help_text="Email address to send applications to")
     expiry_date = models.DateField(blank=True, null=True)
     posted_at = models.DateTimeField(auto_now_add=True)
 
@@ -47,6 +70,7 @@ class Application(models.Model):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
     applied_at = models.DateTimeField(auto_now_add=True)
     cv_used = models.ForeignKey('users.UserDocument', on_delete=models.SET_NULL, null=True, blank=True)
+    cover_letter = models.FileField(upload_to='cover_letters/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} - {self.job}"

@@ -1,197 +1,190 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Details - FindAJob.ai</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="/static/home/style.css">
-    <style>
-        :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --border-color: rgba(255, 255, 255, 0.05);
-            --primary: #3b82f6;
-            --primary-light: #60a5fa;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --font-heading: 'Outfit', sans-serif;
-            --font-body: 'Plus Jakarta Sans', sans-serif;
-        }
+{% block extra_css %}
+<style>
+    :root {
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --border-color: rgba(255, 255, 255, 0.05);
+        --primary: #3b82f6;
+        --primary-light: #60a5fa;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --font-heading: 'Outfit', sans-serif;
+        --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
 
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: var(--font-body);
-            padding-top: 100px;
-        }
+    body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        font-family: var(--font-body);
+    }
 
-        .profile-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px;
-        }
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
 
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        margin-bottom: 40px;
+    }
+
+    .large-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        overflow: hidden;
+        border: 4px solid var(--bg-card);
+    }
+
+    .header-info h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        margin: 0 0 8px 0;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .detail-card {
+        background: var(--bg-card);
+        padding: 24px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .bio-text {
+        color: var(--text-muted);
+        line-height: 1.8;
+        white-space: pre-line;
+    }
+
+    .action-group {
+        margin-top: 32px;
+        display: flex;
+        gap: 16px;
+    }
+
+    .pref-tag {
+        display: inline-block;
+        padding: 6px 14px;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-light);
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    @media (max-width: 640px) {
         .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-            margin-bottom: 40px;
-        }
-
-        .large-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            font-weight: 700;
-            overflow: hidden;
-            border: 4px solid var(--bg-card);
-        }
-
-        .header-info h1 {
-            font-family: var(--font-heading);
-            font-size: 2.5rem;
-            margin-bottom: 8px;
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
         }
 
         .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            grid-template-columns: 1fr;
         }
 
-        .detail-card {
-            background: var(--bg-card);
-            padding: 24px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
+        .header-info h1 {
+            font-size: 2rem;
         }
+    }
+</style>
+{% endblock %}
 
-        .detail-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-            font-weight: 700;
-        }
+{% block content %}
+<main class="profile-container">
+    <div class="profile-header">
+        <div class="large-avatar">
+            {% if profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="Profile"
+                style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+            {{ user.email|slice:":1"|upper }}
+            {% endif %}
+        </div>
+        <div class="header-info">
+            <h1>{% if profile.full_name %}{{ profile.full_name }}{% else %}{{ user.email }}{% endif %}</h1>
+            <p style="color: var(--text-muted);">{{ user.role }}</p>
+        </div>
+    </div>
 
-        .detail-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .bio-text {
-            color: var(--text-muted);
-            line-height: 1.8;
-            white-space: pre-line;
-        }
-
-        .action-group {
-            margin-top: 32px;
-            display: flex;
-            gap: 16px;
-        }
-
-        .pref-tag {
-            display: inline-block;
-            padding: 6px 14px;
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--primary-light);
-            border-radius: 100px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-right: 8px;
-            margin-bottom: 8px;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-    </style>
-</head>
-
-<body>
-    <header class="header">
-        <nav class="nav container">
-            <div class="logo">FindAJob<span class="dot">.</span>ai</div>
-            <div class="nav-links">
-                <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
-                <a href="{% url 'profile_edit' %}" class="btn btn-secondary">Edit Profile</a>
-            </div>
-        </nav>
-    </header>
-
-    <main class="profile-container">
-        <div class="profile-header">
-            <div class="large-avatar">
-                {% if profile.profile_picture %}
-                <img src="{{ profile.profile_picture.url }}" alt="Profile"
-                    style="width: 100%; height: 100%; object-fit: cover;">
+    <div class="detail-grid">
+        <div class="detail-card">
+            <div class="detail-label">Email</div>
+            <div class="detail-value">{{ user.email }}</div>
+        </div>
+        <div class="detail-card">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value">{{ profile.phone_primary|default:"Not provided" }}</div>
+        </div>
+        <div class="detail-card">
+            <div class="detail-label">Location</div>
+            <div class="detail-value">
+                {% if profile.city or profile.country %}
+                {{ profile.city }}{% if profile.city and profile.country %}, {% endif %}{{ profile.country }}
                 {% else %}
-                {{ user.email|slice:":1"|upper }}
+                Not provided
                 {% endif %}
             </div>
-            <div class="header-info">
-                <h1>{% if profile.full_name %}{{ profile.full_name }}{% else %}{{ user.email }}{% endif %}</h1>
-                <p style="color: var(--text-muted);">{{ user.role }}</p>
+        </div>
+        <div class="detail-card">
+            <div class="detail-label">Gender</div>
+            <div class="detail-value">{{ profile.gender|default:"Not provided" }}</div>
+        </div>
+
+        <div class="detail-card full-width">
+            <div class="detail-label">Bio</div>
+            <div class="bio-text">
+                {% if profile.bio %}{{ profile.bio }}{% else %}No bio added yet.{% endif %}
             </div>
         </div>
 
-        <div class="detail-grid">
-            <div class="detail-card">
-                <div class="detail-label">Email</div>
-                <div class="detail-value">{{ user.email }}</div>
+        <div class="detail-card">
+            <div class="detail-label">LinkedIn</div>
+            <div class="detail-value">
+                {% if profile.linkedin_url %}
+                <a href="{{ profile.linkedin_url }}" target="_blank" style="color: var(--primary-light);">View
+                    Profile</a>
+                {% else %}
+                Not provided
+                {% endif %}
             </div>
-            <div class="detail-card">
-                <div class="detail-label">Phone</div>
-                <div class="detail-value">{{ profile.phone_primary|default:"Not provided" }}</div>
-            </div>
-            <div class="detail-card">
-                <div class="detail-label">Location</div>
-                <div class="detail-value">
-                    {% if profile.city or profile.country %}
-                    {{ profile.city }}{% if profile.city and profile.country %}, {% endif %}{{ profile.country }}
-                    {% else %}
-                    Not provided
-                    {% endif %}
-                </div>
-            </div>
-            <div class="detail-card">
-                <div class="detail-label">Gender</div>
-                <div class="detail-value">{{ profile.gender|default:"Not provided" }}</div>
-            </div>
-
-            <div class="detail-card full-width">
-                <div class="detail-label">Bio</div>
-                <div class="bio-text">
-                    {% if profile.bio %}{{ profile.bio }}{% else %}No bio added yet.{% endif %}
-                </div>
-            </div>
-
-            <div class="detail-card">
-                <div class="detail-label">LinkedIn</div>
-                <div class="detail-value">
-                    {% if profile.linkedin_url %}
-                    <a href="{{ profile.linkedin_url }}" target="_blank" style="color: var(--primary-light);">View
-                        Profile</a>
-                    {% else %}
-                    Not provided
-                    {% endif %}
-                </div>
-            </div>
-        </div>
         </div>
 
         <div class="detail-card full-width">
@@ -201,30 +194,19 @@
                 <span class="pref-tag">{{ cat.name }}</span>
                 {% empty %}
                 <p style="color: var(--text-muted); font-size: 0.95rem;">No preferences set yet. <a
-                        href="{% url 'profile_edit' %}"
+                        href="{% url 'job_preference_edit' %}"
                         style="color: var(--primary-light); text-decoration: underline;">Update preferences</a> to get
                     better job matches.</p>
                 {% endfor %}
             </div>
         </div>
-        </div>
-
-        <div class="action-group">
-            <a href="{% url 'profile_edit' %}" class="btn btn-primary">Edit My Profile</a>
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
-        </div>
-    </main>
-
-    {% if messages %}
-    <div class="messages-container">
-        {% for message in messages %}
-        <div class="message {{ message.tags }}">
-            {{ message }}
-        </div>
-        {% endfor %}
     </div>
-    {% endif %}
 
-</body>
-
-</html>
+    <div class="action-group">
+        <a href="{% url 'profile_edit' %}" class="btn btn-primary">Edit Basic Info</a>
+        <a href="{% url 'job_preference_edit' %}" class="btn btn-secondary">Edit Job Preferences</a>
+        <a href="{% url 'payment_history' %}" class="btn btn-secondary">Payment History</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</main>
+{% endblock %}

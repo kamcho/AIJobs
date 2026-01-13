@@ -23,13 +23,11 @@ class ProfileUpdateForm(forms.ModelForm):
         fields = (
             'full_name', 'phone_primary', 'phone_secondary', 
             'gender', 'date_of_birth', 'city', 'country', 
-            'bio', 'linkedin_url', 'portfolio_url', 'profile_picture',
-            'preferred_categories'
+            'bio', 'linkedin_url', 'portfolio_url', 'profile_picture'
         )
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'preferred_categories': forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -90,3 +88,15 @@ class UserDocumentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-input'})
+
+class JobPreferenceForm(forms.ModelForm):
+    class Meta:
+        model = PersonalProfile
+        fields = ('preferred_categories',)
+        widgets = {
+            'preferred_categories': forms.CheckboxSelectMultiple(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # We don't want the default form-input class for checkboxes as it might break styling

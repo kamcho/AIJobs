@@ -1,181 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Education - FindAJob.ai</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="/static/home/style.css">
-    <style>
-        :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --border-color: rgba(255, 255, 255, 0.05);
-            --primary: #3b82f6;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
+{% block title %}Education - FindAJob.ai{% endblock %}
 
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            padding-top: 100px;
-        }
+{% block extra_css %}
+<style>
+    :root {
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --border-color: rgba(255, 255, 255, 0.05);
+        --primary: #3b82f6;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+    }
 
-        .manage-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px;
-        }
+    body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
 
+    .manage-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .manage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .education-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        transition: transform 0.2s;
+    }
+
+    .education-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .edu-info h3 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        margin-bottom: 4px;
+    }
+
+    .edu-meta {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+    }
+
+    .edu-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-icon {
+        padding: 8px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px;
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px dashed var(--border-color);
+    }
+
+    @media (max-width: 640px) {
         .manage-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
         }
 
         .education-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            transition: transform 0.2s;
+            flex-direction: column;
+            gap: 16px;
         }
+    }
+</style>
+{% endblock %}
 
-        .education-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        .edu-info h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.25rem;
-            margin-bottom: 4px;
-        }
-
-        .edu-meta {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-        }
-
-        .edu-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-icon {
-            padding: 8px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-icon:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            background: var(--bg-card);
-            border-radius: 20px;
-            border: 1px dashed var(--border-color);
-        }
-    </style>
-</head>
-
-<body>
-    <header class="header">
-        <nav class="nav container">
-            <div class="logo">FindAJob<span class="dot">.</span>ai</div>
-            <div class="nav-links">
-                <a href="{% url 'dashboard' %}" class="nav-link">Back to Dashboard</a>
-                <a href="{% url 'education_add' %}" class="btn btn-primary">Add Education</a>
-            </div>
-        </nav>
-    </header>
-
-    <main class="manage-container">
-        <div class="manage-header">
-            <div>
-                <h1 style="font-family: 'Outfit', sans-serif; font-size: 2rem;">Education</h1>
-                <p style="color: var(--text-muted);">Manage your academic qualifications.</p>
-            </div>
-            <a href="{% url 'education_add' %}" class="btn btn-primary">Add Education</a>
+{% block content %}
+<main class="manage-container">
+    <div class="manage-header">
+        <div>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 2rem;">Education</h1>
+            <p style="color: var(--text-muted);">Manage your academic qualifications.</p>
         </div>
+        <a href="{% url 'education_add' %}" class="btn btn-primary">Add Education</a>
+    </div>
 
-        {% if educations %}
-        <div class="education-list">
-            {% for edu in educations %}
-            <div class="education-card">
-                <div class="edu-info">
-                    <h3>{{ edu.level }} in {{ edu.field_of_study }}</h3>
-                    <div class="edu-meta">
-                        {{ edu.institution }} • {{ edu.start_date|date:"F Y" }} -
-                        {% if edu.end_date %}{{ edu.end_date|date:"F Y" }}{% else %}Present{% endif %}
-                        {% if edu.grade %}<br>⭐ Grade: {{ edu.grade }}{% endif %}
-                    </div>
-                </div>
-                <div class="edu-actions">
-                    <a href="{% url 'education_edit' edu.pk %}" class="btn-icon" title="Edit">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
-                        </svg>
-                    </a>
-                    <a href="{% url 'education_delete' edu.pk %}" class="btn-icon" title="Delete"
-                        style="color: #ef4444;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                            </path>
-                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
-                    </a>
+    {% if educations %}
+    <div class="education-list">
+        {% for edu in educations %}
+        <div class="education-card">
+            <div class="edu-info">
+                <h3>{{ edu.level }} in {{ edu.field_of_study }}</h3>
+                <div class="edu-meta">
+                    {{ edu.institution }} • {{ edu.start_date|date:"F Y" }} -
+                    {% if edu.end_date %}{{ edu.end_date|date:"F Y" }}{% else %}Present{% endif %}
+                    {% if edu.grade %}<br>⭐ Grade: {{ edu.grade }}{% endif %}
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🎓</div>
-            <h2>No education entries added yet</h2>
-            <p style="color: var(--text-muted); margin-bottom: 24px;">Adding your education history helps us find jobs
-                that match your qualifications.</p>
-            <a href="{% url 'education_add' %}" class="btn btn-primary">Add Your First Education</a>
-        </div>
-        {% endif %}
-    </main>
-
-    {% if messages %}
-    <div class="messages-container">
-        {% for message in messages %}
-        <div class="message {{ message.tags }}">
-            {{ message }}
+            <div class="edu-actions">
+                <a href="{% url 'education_edit' edu.pk %}" class="btn-icon" title="Edit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'education_delete' edu.pk %}" class="btn-icon" title="Delete" style="color: #ef4444;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                        </path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </a>
+            </div>
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 20px;">🎓</div>
+        <h2>No education entries added yet</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Adding your education history helps us find jobs
+            that match your qualifications.</p>
+        <a href="{% url 'education_add' %}" class="btn btn-primary">Add Your First Education</a>
+    </div>
     {% endif %}
-
-</body>
-
-</html>
+</main>
+{% endblock %}

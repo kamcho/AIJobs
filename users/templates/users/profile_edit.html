@@ -1,270 +1,236 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile - FindAJob.ai</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="/static/home/style.css">
-    <style>
-        :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --border-color: rgba(255, 255, 255, 0.05);
-            --primary: #3b82f6;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
+{% block title %}Edit Profile - FindAJob.ai{% endblock %}
 
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            padding-top: 100px;
+{% block extra_css %}
+<style>
+    :root {
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --border-color: rgba(255, 255, 255, 0.05);
+        --primary: #3b82f6;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+    }
+
+    body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .edit-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 40px;
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .edit-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .edit-header h1 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.25rem;
+        margin-bottom: 8px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: white;
+        font-family: inherit;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    textarea.form-input {
+        resize: vertical;
+    }
+
+    .submit-group {
+        margin-top: 40px;
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-large {
+        padding: 14px 32px;
+        font-size: 1rem;
+    }
+
+    .errorlist {
+        color: #ef4444;
+        list-style: none;
+        font-size: 0.85rem;
+        padding: 0;
+        margin-top: 4px;
+    }
+
+    .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .checkbox-grid label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0 !important;
+        font-weight: 400 !important;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .checkbox-grid label:hover {
+        color: var(--primary-light);
+    }
+
+    .checkbox-grid input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+    }
+
+    @media (max-width: 640px) {
+        .form-grid {
+            grid-template-columns: 1fr;
         }
 
         .edit-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px;
-            background: var(--bg-card);
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 30px 20px;
         }
+    }
+</style>
+{% endblock %}
 
-        .edit-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+{% block content %}
+<main class="container">
+    <div class="edit-container">
+        <div class="edit-header">
+            <h1>Edit Your Profile</h1>
+            <p style="color: var(--text-muted);">Keep your professional presence up to date.</p>
+        </div>
 
-        .edit-header h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.25rem;
-            margin-bottom: 8px;
-        }
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                    {{ form.full_name }}
+                    {{ form.full_name.errors }}
+                </div>
 
-        .form-group {
-            margin-bottom: 24px;
-        }
+                <div class="form-group">
+                    <label for="{{ form.phone_primary.id_for_label }}">Primary Phone</label>
+                    {{ form.phone_primary }}
+                    {{ form.phone_primary.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.phone_secondary.id_for_label }}">Secondary Phone</label>
+                    {{ form.phone_secondary }}
+                    {{ form.phone_secondary.errors }}
+                </div>
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
+                <div class="form-group">
+                    <label for="{{ form.city.id_for_label }}">City</label>
+                    {{ form.city }}
+                    {{ form.city.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.country.id_for_label }}">Country</label>
+                    {{ form.country }}
+                    {{ form.country.errors }}
+                </div>
 
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #e2e8f0;
-            font-size: 0.9rem;
-        }
+                <div class="form-group">
+                    <label for="{{ form.gender.id_for_label }}">Gender</label>
+                    {{ form.gender }}
+                    {{ form.gender.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                    {{ form.date_of_birth.errors }}
+                </div>
 
-        .form-input {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: white;
-            font-family: inherit;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-        }
+                <div class="form-group full-width">
+                    <label for="{{ form.bio.id_for_label }}">Professional Bio</label>
+                    {{ form.bio }}
+                    {{ form.bio.errors }}
+                </div>
 
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.06);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
+                <div class="form-group">
+                    <label for="{{ form.linkedin_url.id_for_label }}">LinkedIn URL</label>
+                    {{ form.linkedin_url }}
+                    {{ form.linkedin_url.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.portfolio_url.id_for_label }}">Portfolio URL</label>
+                    {{ form.portfolio_url }}
+                    {{ form.portfolio_url.errors }}
+                </div>
 
-        textarea.form-input {
-            resize: vertical;
-        }
-
-        .submit-group {
-            margin-top: 40px;
-            display: flex;
-            gap: 16px;
-            justify-content: flex-end;
-            padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .btn-large {
-            padding: 14px 32px;
-            font-size: 1rem;
-        }
-
-        .errorlist {
-            color: #ef4444;
-            list-style: none;
-            font-size: 0.85rem;
-            margin-top: 4px;
-        }
-
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .checkbox-grid label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 0 !important;
-            font-weight: 400 !important;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .checkbox-grid label:hover {
-            color: var(--primary-light);
-        }
-
-        .checkbox-grid input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.05);
-            cursor: pointer;
-        }
-    </style>
-</head>
-
-<body>
-    <header class="header">
-        <nav class="nav container">
-            <div class="logo">FindAJob<span class="dot">.</span>ai</div>
-            <div class="nav-links">
-                <a href="{% url 'profile_detail' %}" class="nav-link">View Profile</a>
-                <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container" style="padding: 40px 0;">
-        <div class="edit-container">
-            <div class="edit-header">
-                <h1>Edit Your Profile</h1>
-                <p style="color: var(--text-muted);">Keep your professional presence up to date.</p>
-            </div>
-
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="{{ form.full_name.id_for_label }}">Full Name</label>
-                        {{ form.full_name }}
-                        {{ form.full_name.errors }}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.phone_primary.id_for_label }}">Primary Phone</label>
-                        {{ form.phone_primary }}
-                        {{ form.phone_primary.errors }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.phone_secondary.id_for_label }}">Secondary Phone</label>
-                        {{ form.phone_secondary }}
-                        {{ form.phone_secondary.errors }}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.city.id_for_label }}">City</label>
-                        {{ form.city }}
-                        {{ form.city.errors }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.country.id_for_label }}">Country</label>
-                        {{ form.country }}
-                        {{ form.country.errors }}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.gender.id_for_label }}">Gender</label>
-                        {{ form.gender }}
-                        {{ form.gender.errors }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
-                        {{ form.date_of_birth }}
-                        {{ form.date_of_birth.errors }}
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label for="{{ form.bio.id_for_label }}">Professional Bio</label>
-                        {{ form.bio }}
-                        {{ form.bio.errors }}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.linkedin_url.id_for_label }}">LinkedIn URL</label>
-                        {{ form.linkedin_url }}
-                        {{ form.linkedin_url.errors }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.portfolio_url.id_for_label }}">Portfolio URL</label>
-                        {{ form.portfolio_url }}
-                        {{ form.portfolio_url.errors }}
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
-                        {{ form.profile_picture }}
-                        {{ form.profile_picture.errors }}
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Job Category Preferences</label>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Select the
-                            industries you are interested in to see tailored recommendations.</p>
-                        <div class="checkbox-grid">
-                            {% for checkbox in form.preferred_categories %}
-                            {{ checkbox }}
-                            {% endfor %}
-                        </div>
-                        {{ form.preferred_categories.errors }}
-                    </div>
+                <div class="form-group full-width">
+                    <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+                    {{ form.profile_picture }}
+                    {{ form.profile_picture.errors }}
                 </div>
 
                 <div class="submit-group">
                     <a href="{% url 'profile_detail' %}" class="btn btn-secondary btn-large">Cancel</a>
                     <button type="submit" class="btn btn-primary btn-large">Save Changes</button>
                 </div>
-            </form>
-        </div>
-    </main>
-
-    {% if messages %}
-    <div class="messages-container">
-        {% for message in messages %}
-        <div class="message {{ message.tags }}">
-            {{ message }}
-        </div>
-        {% endfor %}
+        </form>
     </div>
-    {% endif %}
-
-</body>
-
-</html>
+</main>
+{% endblock %}

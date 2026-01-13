@@ -313,8 +313,8 @@
 {% block content %}
 <main class="container main-layout">
     <section class="welcome-section">
-        <h1 class="welcome-title">Welcome back, {% if profile.full_name %}{{ profile.full_name }}{% else %}{{ user.email
-            }}{% endif %}!</h1>
+        <h1 class="welcome-title">Welcome back, {% if profile.full_name %}{{ profile.full_name }}{% else %}{{
+            user.email}}{% endif %}!</h1>
         <p class="welcome-subtitle">Here's what's happening with your account today.</p>
     </section>
 
@@ -361,6 +361,56 @@
             </div>
             {% endif %}
 
+            <!-- Recent Applications -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="title-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--primary);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        Recent Applications
+                    </div>
+                    {% if applications.count %}
+                    <span class="badge-small"
+                        style="background: rgba(59, 130, 246, 0.1); color: var(--primary-light);">{{ applications.count }} Total</span>
+                    {% endif %}
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    {% for app in applications|slice:":4" %}
+                    <div class="match-item" style="margin-bottom: 0;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <h4 style="font-size: 0.95rem; font-weight: 700;">{{ app.job.title }}</h4>
+                            <span
+                                class="status-pill status-{% if app.status == 'Applied' %}success{% else %}applied{% endif %}"
+                                style="margin-top: 0;">
+                                {{ app.status }}
+                            </span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">{{ app.job.company}} • {{ app.applied_at|date:"M d, Y" }}</p>
+                        <a href="{% url 'application_detail' app.pk %}" class="btn btn-secondary"
+                            style="padding: 6px 12px; font-size: 0.8rem; width: 100%; text-align: center; border-radius: 8px;">View
+                            Application</a>
+                    </div>
+                    {% empty %}
+                    <p
+                        style="color: var(--text-muted); font-size: 0.85rem; padding: 20px; text-align: center; grid-column: 1 / -1;">
+                        No recent applications yet.</p>
+                    {% endfor %}
+                </div>
+                {% if applications.count > 4 %}
+                <a href="{% url 'application_list' %}" class="btn-view-all">View All Applications</a>
+                {% endif %}
+            </div>
+
             <!-- Professional Profile -->
             <div class="card">
                 <div class="card-header">
@@ -389,8 +439,8 @@
                         <div class="item-icon">💼</div>
                         <div class="item-content">
                             <h4>{{ exp.job_title }}</h4>
-                            <p>{{ exp.company_name }} • {{ exp.start_date|date:"M Y" }} - 
-                              {% if  exp.is_current%}Present{% else %}{{ exp.end_date|date:"M Y" }}{% endif %}</p>
+                            <p>{{ exp.company_name }} • {{ exp.start_date|date:"M Y" }} -
+                                {% if exp.is_current%}Present{% else %}{{ exp.end_date|date:"M Y" }}{% endif %}</p>
                             {% if exp.location %}<p style="font-size: 0.75rem;">📍 {{ exp.location }}</p>{% endif %}
                         </div>
                     </div>
@@ -457,7 +507,7 @@
                         <a href="{% url 'profile_edit' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if educations %}✓{% else %}○{% endif%}</span> Education</span>
+                        <span class="item-label"><span class="check-icon">{% if educations %}✓{% else %}○{%endif%}</span> Education</span>
                         <a href="{% url 'education_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
@@ -471,7 +521,7 @@
                         <a href="{% url 'skill_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if all_documents %}✓{% else %}○{% endif %}</span> Documents</span>
+                        <span class="item-label"><span class="check-icon">{% if all_documents %}✓{% else %}○{% endif  %}</span> Documents</span>
                         <a href="{% url 'document_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                 </div>
@@ -486,35 +536,16 @@
                 </div>
                 <div class="score-info">
                     <h3 style="font-size: 1rem; margin-bottom: 4px;">CV AI Rating</h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
-                            {% if cv_score >= 80 %}Excellent match for roles{% elif cv_score >= 60 %}Strong professional
-                            profile{% else %}Optimization recommended{% endif %}
-                        </p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                        {% if cv_score >= 80 %}Excellent match for roles{% elif cv_score >= 60 %}Strong professional
+                        profile{% else %}Optimization recommended{% endif %}
+                    </p>
                     <a href="{% url 'document_detail' latest_cv.pk %}" class="update-link"
                         style="font-weight: 700;">View Full Analysis ›</a>
                 </div>
             </div>
             {% endif %}
 
-            <!-- Recent Applications -->
-            <div class="card sidebar-card">
-                <h3 class="section-title">Recent Applications</h3>
-                {% for app in applications|slice:":3" %}
-                <div class="match-item">
-                    <div class="match-info">
-                        <h5>{{ app.job.title }}</h5>
-                        <div class="match-meta">{{ app.job.company }}</div>
-                        <span
-                            class="status-pill status-{% if app.status == 'Applied' %}success{% else %}applied{% endif %}">
-                            {{ app.status }}
-                        </span>
-                    </div>
-                </div>
-                {% empty %}
-                <p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;">No recent applications.</p>
-                {% endfor %}
-                <a href="#" class="btn-view-all">View All Applications</a>
-            </div>
 
             <!-- Documents -->
             <div class="card sidebar-card">
@@ -525,7 +556,7 @@
                 {% for doc in all_documents %}
                 <div class="match-item" style="display: flex; align-items: center; gap: 12px; padding: 12px;">
                     <div style="font-size: 1.25rem;">
-                        {% if 'PDF' in doc.document_type.name %}📄{% elif 'CV' in doc.document_type.name %}💼{% else%}📜{% endif %}
+                        {% if 'PDF' in doc.document_type.name %}📄{% elif 'CV' in doc.document_type.name %}💼{%  else%}📜{% endif %}
                     </div>
                     <div class="match-info">
                         <h5 style="font-size: 0.85rem; margin-bottom: 0;">{{ doc.document_type.name }}</h5>

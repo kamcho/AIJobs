@@ -6,8 +6,3 @@ from .models import MyUser, PersonalProfile
 def create_personal_profile(sender, instance, created, **kwargs):
     if created:
         PersonalProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=MyUser)
-def save_personal_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'profile'):
-        instance.profile.save()

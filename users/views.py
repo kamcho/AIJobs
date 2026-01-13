@@ -2,8 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import SignupForm, LoginForm, ProfileUpdateForm, WorkExperienceForm, EducationForm, MySkillForm, UserDocumentForm
-from .models import PersonalProfile, MyUser, WorkExperience, Education, MySkill, UserDocument, CVAnalysis
+from django.utils import timezone
+from .forms import (
+    SignupForm, LoginForm, ProfileUpdateForm, WorkExperienceForm, 
+    EducationForm, MySkillForm, UserDocumentForm, JobPreferenceForm
+)
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .mpesa_service import MpesaService
+from .models import PersonalProfile, MyUser, WorkExperience, Education, MySkill, UserDocument, CVAnalysis, Subscription, MpesaTransaction
 from home.services import TextExtractor
 from home.ai_service import AIService
 
@@ -66,6 +73,24 @@ def profile_edit(request):
         form = ProfileUpdateForm(instance=profile)
     
     return render(request, 'users/profile_edit.html', {'form': form, 'profile': profile})
+
+@login_required
+def job_preference_edit(request):
+    try:
+        profile = request.user.profile
+    except PersonalProfile.DoesNotExist:
+        profile = PersonalProfile.objects.create(user=request.user)
+    
+    if request.method == 'POST':
+        form = JobPreferenceForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Job preferences updated successfully.")
+            return redirect('profile_detail')
+    else:
+        form = JobPreferenceForm(instance=profile)
+    
+    return render(request, 'users/job_preference_edit.html', {'form': form, 'profile': profile})
 
 @login_required
 def experience_list(request):
@@ -263,3 +288,83 @@ def document_delete(request, pk):
         messages.success(request, "Document deleted.")
         return redirect('document_list')
     return render(request, 'users/document_confirm_delete.html', {'document': doc})
+
+@login_required
+def subscription_page(request):
+    subscription = getattr(request.user, 'subscription', None)
+    pricing = {
+        'Basic': 200,
+        'Pro': 500,
+        'Ultimate': 1500
+    }
+    
+    if request.method == 'POST':
+        tier = request.POST.get('tier')
+        phone_number = request.POST.get('phone_number')
+        
+        if tier in pricing:
+            amount = pricing[tier]
+            if not phone_number:
+                messages.error(request, "Please provide a valid phone number for M-Pesa payment.")
+            else:
+                success, message = MpesaService.initiate_stk_push(request.user, phone_number, amount, tier)
+                if success:
+                    messages.success(request, message)
+                else:
+                    messages.error(request, message)
+            return redirect('subscription_page')
+            
+    return render(request, 'users/subscription.html', {
+        'subscription': subscription,
+        'tiers': Subscription.TIER_CHOICES
+    })
+
+@csrf_exempt
+def mpesa_callback(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        stk_callback = data.get('Body', {}).get('stkCallback', {})
+        
+        result_code = stk_callback.get('ResultCode')
+        checkout_request_id = stk_callback.get('CheckoutRequestID')
+        merchant_request_id = stk_callback.get('MerchantRequestID')
+        result_desc = stk_callback.get('ResultDesc')
+        
+        try:
+            transaction = MpesaTransaction.objects.get(checkout_request_id=checkout_request_id)
+            transaction.result_code = result_code
+            transaction.result_description = result_desc
+            
+            if result_code == 0:
+                # Payment Successful
+                transaction.status = 'Success'
+                # Extract details from CallbackMetadata
+                items = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+                for item in items:
+                    if item.get('Name') == 'MpesaReceiptNumber':
+                        transaction.mpesa_receipt_number = item.get('Value')
+                
+                # Update/Create Subscription
+                from django.utils import timezone
+                from datetime import timedelta
+                
+                sub, created = Subscription.objects.get_or_create(user=transaction.user)
+                sub.tier = transaction.subscription_tier
+                sub.is_active = True
+                sub.start_date = timezone.now()
+                sub.expiry_date = timezone.now() + timedelta(days=90) # 3 months
+                sub.save()
+            else:
+                transaction.status = 'Failed'
+                
+            transaction.save()
+            return render(request, 'users/callback_success.html', status=200) # Simple response for Safaricom
+        except MpesaTransaction.DoesNotExist:
+            return render(request, 'users/callback_error.html', status=404)
+            
+    return render(request, 'users/callback_error.html', status=405)
+
+@login_required
+def payment_history(request):
+    transactions = request.user.mpesa_transactions.all().order_by('-created_at')
+    return render(request, 'users/payment_history.html', {'transactions': transactions})

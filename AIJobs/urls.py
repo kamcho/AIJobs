@@ -17,11 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from users import views as users_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
     path('auth/', include('users.urls')),
+    path('mpesa/callback/', users_views.mpesa_callback, name='mpesa_callback'),
     path('accounts/', include('allauth.urls')),
     path('jobs/', include('jobs.urls')),
 ]

@@ -1,6 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
-from .models import JobListing, JobCategory
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.files.base import ContentFile
+from .models import JobListing, JobCategory, Application, JobRequirement
+from .forms import ApplicationForm, JobListingForm, JobRequirementForm
+from .services import EmailService
+from .utils import DocumentGenerator
+from home.ai_service import AIService
+from django.contrib.auth.decorators import user_passes_test
 
 def job_list(request):
     query = request.GET.get('q', '')
@@ -37,9 +45,149 @@ def job_list(request):
     }
     return render(request, 'jobs/job_list.html', context)
 
+@login_required
+def apply_via_email(request, pk):
+    job = get_object_or_404(JobListing, pk=pk)
+    
+    if not job.employer_email:
+        messages.error(request, "This job does not support email applications.")
+        return redirect('job_detail', pk=pk)
+        
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        form = ApplicationForm(request.POST, request.FILES, user=request.user)
+        
+        if action == 'generate_ai':
+            generated_text = AIService.generate_cover_letter(request.user, job)
+            # Re-initialize form with generated text and current data (like cv_used)
+            form = ApplicationForm(user=request.user, initial={
+                'cover_letter_text': generated_text,
+                'cv_used': request.POST.get('cv_used')
+            })
+            messages.info(request, "AI Cover Letter generated! You can review and edit it below.")
+            return render(request, 'jobs/email_application.html', {'form': form, 'job': job})
+
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.user = request.user
+            application.job = job
+            application.status = 'Applied'
+            
+            # If AI text was provided, generate document based on chosen format
+            if form.cleaned_data.get('cover_letter_text'):
+                text_content = form.cleaned_data.get('cover_letter_text')
+                file_format = form.cleaned_data.get('file_format', 'pdf')
+                filename = f"cover_letter_{request.user.id}_{job.id}.{file_format}"
+                
+                doc_content = DocumentGenerator.get_document_content(text_content, file_format)
+                application.cover_letter.save(filename, ContentFile(doc_content), save=False)
+                
+            application.save()
+            
+            # Send Email
+            success, message = EmailService.send_application_email(
+                user=request.user,
+                job=job,
+                cover_letter_file=application.cover_letter,
+                cv_file_path=application.cv_used.file.path if application.cv_used else None
+            )
+            
+            if success:
+                messages.success(request, f"Application sent successfully! ({message})")
+            else:
+                messages.warning(request, f"Application logged, but email failed: {message}")
+                
+            return redirect('job_detail', pk=pk)
+    else:
+        form = ApplicationForm(user=request.user)
+        
+    return render(request, 'jobs/email_application.html', {'form': form, 'job': job})
+
 def job_detail(request, pk):
     job = get_object_or_404(JobListing, pk=pk)
+    user_application = None
+    if request.user.is_authenticated:
+        user_application = Application.objects.filter(user=request.user, job=job).first()
+        
     context = {
         'job': job,
+        'user_application': user_application,
     }
     return render(request, 'jobs/job_detail.html', context)
+
+@login_required
+def application_list(request):
+    applications = Application.objects.filter(user=request.user).order_by('-applied_at')
+    return render(request, 'jobs/application_list.html', {'applications': applications})
+
+@login_required
+def application_detail(request, pk):
+    application = get_object_or_404(Application, pk=pk, user=request.user)
+    return render(request, 'jobs/application_detail.html', {'application': application})
+
+def is_admin(user):
+    return user.is_authenticated and user.role == 'Admin'
+
+@user_passes_test(is_admin)
+def admin_create_job(request):
+    if request.method == 'POST':
+        job_form = JobListingForm(request.POST)
+        if job_form.is_valid():
+            job = job_form.save()
+            
+            # Handle Requirements
+            req_descriptions = request.POST.getlist('requirement_description')
+            req_mandatory = request.POST.getlist('requirement_mandatory')
+            
+            for i in range(len(req_descriptions)):
+                desc = req_descriptions[i].strip()
+                if desc:
+                    is_mandatory = True if str(i) in req_mandatory else False
+                    JobRequirement.objects.create(
+                        job=job,
+                        description=desc,
+                        is_mandatory=is_mandatory
+                    )
+            
+            messages.success(request, f"Job Listing '{job.title}' created successfully!")
+            return redirect('job_detail', pk=job.pk)
+    else:
+        job_form = JobListingForm()
+        
+    return render(request, 'jobs/admin_create_job.html', {
+        'job_form': job_form,
+    })
+
+@user_passes_test(is_admin)
+def admin_edit_job(request, pk):
+    job = get_object_or_404(JobListing, pk=pk)
+    if request.method == 'POST':
+        job_form = JobListingForm(request.POST, instance=job)
+        if job_form.is_valid():
+            job = job_form.save()
+            
+            # Update Requirements: Remove existing and create new ones
+            job.requirements.all().delete()
+            
+            req_descriptions = request.POST.getlist('requirement_description')
+            req_mandatory = request.POST.getlist('requirement_mandatory')
+            
+            for i in range(len(req_descriptions)):
+                desc = req_descriptions[i].strip()
+                if desc:
+                    is_mandatory = True if str(i) in req_mandatory else False
+                    JobRequirement.objects.create(
+                        job=job,
+                        description=desc,
+                        is_mandatory=is_mandatory
+                    )
+            
+            messages.success(request, f"Job Listing '{job.title}' updated successfully!")
+            return redirect('job_detail', pk=job.pk)
+    else:
+        job_form = JobListingForm(instance=job)
+        
+    return render(request, 'jobs/admin_edit_job.html', {
+        'job_form': job_form,
+        'job': job,
+    })
