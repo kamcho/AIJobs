@@ -190,7 +190,13 @@
             </div>
             <div class="header-info">
                 <h1>{{ job.title }}</h1>
+                {% if job.company_profile %}
+                <a href="{% url 'company_detail' job.company_profile.pk %}" class="header-company" style="text-decoration: none;">
+                    {{ job.company_profile.name }}
+                </a>
+                {% else %}
                 <span class="header-company">{{ job.company }}</span>
+                {% endif %}
             </div>
         </div>
         <div style="text-align: right;">

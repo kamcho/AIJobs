@@ -3,8 +3,8 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.files.base import ContentFile
-from .models import JobListing, JobCategory, Application, JobRequirement
-from .forms import ApplicationForm, JobListingForm, JobRequirementForm
+from .models import JobListing, JobCategory, Application, JobRequirement, Company
+from .forms import ApplicationForm, JobListingForm, JobRequirementForm, CompanyForm
 from .services import EmailService
 from .utils import DocumentGenerator
 from home.ai_service import AIService
@@ -152,7 +152,16 @@ def admin_create_job(request):
             messages.success(request, f"Job Listing '{job.title}' created successfully!")
             return redirect('job_detail', pk=job.pk)
     else:
-        job_form = JobListingForm()
+        company_id = request.GET.get('company')
+        initial = {}
+        if company_id:
+            try:
+                company = Company.objects.get(pk=company_id)
+                initial['company_profile'] = company
+                initial['company'] = company.name
+            except Company.DoesNotExist:
+                pass
+        job_form = JobListingForm(initial=initial)
         
     return render(request, 'jobs/admin_create_job.html', {
         'job_form': job_form,
@@ -191,3 +200,30 @@ def admin_edit_job(request, pk):
         'job_form': job_form,
         'job': job,
     })
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def create_company(request):
+    if request.method == 'POST':
+        form = CompanyForm(request.POST, request.FILES)
+        if form.is_valid():
+            company = form.save()
+            messages.success(request, f'Company "{company.name}" created successfully!')
+            return redirect('company_detail', pk=company.pk)
+    else:
+        form = CompanyForm()
+    
+    return render(request, 'jobs/company_form.html', {
+        'form': form,
+        'title': 'Add New Company'
+    })
+
+
+def company_detail(request, pk):
+    company = get_object_or_404(Company, pk=pk)
+    jobs = company.jobs.all().order_by('-posted_at')
+    context = {
+        'company': company,
+        'jobs': jobs,
+    }
+    return render(request, 'jobs/company_detail.html', context)

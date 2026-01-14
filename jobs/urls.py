@@ -9,4 +9,7 @@ urlpatterns = [
     path('applications/<int:pk>/', views.application_detail, name='application_detail'),
     path('admin/create-job/', views.admin_create_job, name='admin_create_job'),
     path('admin/edit-job/<int:pk>/', views.admin_edit_job, name='admin_edit_job'),
+    path('admin/companies/add/', views.create_company, name='create_company'),
+    path('companies/<int:pk>/', views.company_detail, name='company_detail'),
+
 ]

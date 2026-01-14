@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }} - Company Profile | FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-layout {
+        padding: 40px 0;
+    }
+
+    .company-header {
+        margin-bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .company-header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .company-logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .company-title {
+        font-family: var(--font-heading);
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .company-subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 32px;
+    }
+
+    .card {
+        background-color: var(--bg-card);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 24px;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .card-title {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .title-icon {
+        width: 34px;
+        height: 34px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    .company-description {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .match-item {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
+    .match-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .btn-view {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .info-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .info-row {
+        font-size: 0.9rem;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        color: var(--text-main);
+        font-weight: 500;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .company-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="container main-layout">
+    <a href="{% url 'job_list' %}" class="back-link">
+        <span>←</span> Back to Jobs
+    </a>
+
+    <section class="company-header">
+        <div class="company-header-left">
+            <div class="company-logo">
+                {% if company.logo %}
+                    <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="max-width: 100%; max-height: 100%; border-radius: 16px;">
+                {% else %}
+                    {{ company.name|slice:":1" }}
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="company-title">{{ company.name }}</h1>
+                <p class="company-subtitle">
+                    {% if company.location %}📍 {{ company.location }}{% endif %}
+                    {% if company.founded_in %} • Since {{ company.founded_in }}{% endif %}
+                </p>
+            </div>
+        </div>
+        {% if user.role == 'Admin' %}
+        <div>
+            <a href="{% url 'admin_create_job' %}?company={{ company.pk }}"
+               class="btn btn-primary"
+               style="padding: 10px 18px; font-size: 0.85rem; border-radius: 999px;">
+                + Create Job Listing
+            </a>
+        </div>
+        {% endif %}
+    </section>
+
+    <div class="dashboard-grid">
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="title-icon">🏢</div>
+                        Company Overview
+                    </div>
+                </div>
+                <div class="company-description">
+                    {% if company.description %}
+                        {{ company.description }}
+                    {% else %}
+                        No detailed description has been provided for this company yet.
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="title-icon">💼</div>
+                        Open Roles at {{ company.name }}
+                    </div>
+                </div>
+
+                {% if jobs %}
+                    {% for job in jobs %}
+                        <div class="match-item">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <h4 style="font-size: 0.95rem; margin: 0;">{{ job.title }}</h4>
+                                <span style="font-size: 0.75rem; color: var(--primary-light);">{{ job.category.name }}</span>
+                            </div>
+                            <p class="match-meta">
+                                📍 {{ job.location }}
+                                {% if job.posted_at %} • Posted {{ job.posted_at|date:"M d, Y" }}{% endif %}
+                            </p>
+                            <a href="{% url 'job_detail' job.pk %}" class="btn-view">View Role</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                        There are currently no active job listings for this company.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <aside>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="title-icon">📇</div>
+                        Contact & Links
+                    </div>
+                </div>
+                <div class="info-list">
+                    {% if company.website %}
+                    <div class="info-row">
+                        <span class="info-label">Website</span>
+                        <span class="info-value">
+                            <a href="{{ company.website }}" target="_blank" style="color: var(--primary-light); text-decoration: none;">
+                                {{ company.website }}
+                            </a>
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if company.primary_email or company.secondary_email %}
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">
+                            {% if company.primary_email %}{{ company.primary_email }}{% endif %}
+                            {% if company.secondary_email %}<br>{{ company.secondary_email }}{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if company.primary_phone or company.secondary_phone %}
+                    <div class="info-row">
+                        <span class="info-label">Phone</span>
+                        <span class="info-value">
+                            {% if company.primary_phone %}{{ company.primary_phone }}{% endif %}
+                            {% if company.secondary_phone %}<br>{{ company.secondary_phone }}{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if not company.website and not company.primary_email and not company.secondary_email and not company.primary_phone and not company.secondary_phone %}
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                        No contact information has been added for this company yet.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</main>
+{% endblock %}
+

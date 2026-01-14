@@ -1,5 +1,5 @@
 from django import forms
-from .models import Application, JobListing, JobRequirement
+from .models import Application, JobListing, JobRequirement, Company
 from users.models import UserDocument
 
 class ApplicationForm(forms.ModelForm):
@@ -41,7 +41,7 @@ class JobListingForm(forms.ModelForm):
     class Meta:
         model = JobListing
         fields = [
-            'title', 'category', 'company', 'description', 
+            'title', 'category', 'company', 'company_profile', 'description', 
             'location', 'url', 'education_level_required', 
             'experience_required_years', 'employer_email', 'expiry_date'
         ]
@@ -56,6 +56,15 @@ class JobListingForm(forms.ModelForm):
             if field != 'expiry_date' and field != 'description':
                 self.fields[field].widget.attrs.update({'class': 'form-input'})
 
+    def save(self, commit=True):
+        job = super().save(commit=False)
+        company_profile = self.cleaned_data.get('company_profile')
+        if company_profile and not job.company:
+            job.company = company_profile.name
+        if commit:
+            job.save()
+        return job
+
 class JobRequirementForm(forms.ModelForm):
     class Meta:
         model = JobRequirement
@@ -63,3 +72,22 @@ class JobRequirementForm(forms.ModelForm):
         widgets = {
             'description': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. 3+ years of Python experience'}),
         }
+
+class CompanyForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        fields = [
+            'name', 'logo', 'description', 'website', 'location',
+            'primary_phone', 'secondary_phone', 'primary_email', 'secondary_email',
+            'founded_in'
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 4}),
+            'founded_in': forms.NumberInput(attrs={'class': 'form-input', 'min': '1900', 'max': '2100'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            if field != 'description' and field != 'logo':
+                self.fields[field].widget.attrs.update({'class': 'form-input'})
