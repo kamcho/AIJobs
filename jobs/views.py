@@ -36,12 +36,41 @@ def job_list(request):
             pass
 
     categories = JobCategory.objects.all().order_by('name')
+
+    # Profile nudge state for logged-in users
+    personal_complete = False
+    documents_complete = False
+    preferences_complete = False
+    show_profile_nudge_modal = False
+
+    if request.user.is_authenticated:
+        profile = getattr(request.user, 'profile', None)
+        from users.models import UserDocument  # local import to avoid cycles at top
+
+        if profile is not None:
+            personal_complete = bool(getattr(profile, "full_name", "")) and bool(
+                getattr(profile, "phone_primary", "")
+            )
+            preferences_complete = profile.preferred_categories.exists()
+
+        cv_documents = UserDocument.objects.filter(
+            user=request.user, document_type__name__icontains='CV'
+        )
+        documents_complete = cv_documents.exists()
+
+        show_profile_nudge_modal = (
+            not personal_complete or not documents_complete or not preferences_complete
+        )
     
     context = {
         'jobs': jobs,
         'categories': categories,
         'query': query,
         'selected_category': int(category_id) if category_id and category_id.isdigit() else None,
+        'personal_complete': personal_complete,
+        'documents_complete': documents_complete,
+        'preferences_complete': preferences_complete,
+        'show_profile_nudge_modal': show_profile_nudge_modal,
     }
     return render(request, 'jobs/job_list.html', context)
 

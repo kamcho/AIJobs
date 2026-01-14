@@ -328,11 +328,105 @@
             margin-bottom: 16px;
         }
     }
+
+    /* Profile nudge modal */
+    .profile-nudge-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+
+    .profile-nudge-modal {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        max-width: 420px;
+        width: 100%;
+        padding: 20px 20px 16px;
+        box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    .profile-nudge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .profile-nudge-title {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .profile-nudge-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+        padding: 4px;
+    }
+
+    .profile-nudge-body {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .profile-nudge-body ul {
+        padding-left: 18px;
+        margin: 8px 0 0;
+    }
+
+    .profile-nudge-body li+li {
+        margin-top: 4px;
+    }
+
+    .profile-nudge-body a {
+        color: var(--primary-light);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .profile-nudge-body a:hover {
+        text-decoration: underline;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <main class="container main-layout">
+    {% if show_profile_nudge_modal %}
+    <div class="profile-nudge-backdrop" id="profileNudgeModal">
+        <div class="profile-nudge-modal" role="dialog" aria-modal="true" aria-labelledby="profile-nudge-title">
+            <div class="profile-nudge-header">
+                <h2 class="profile-nudge-title" id="profile-nudge-title">Complete your profile</h2>
+                <button type="button" class="profile-nudge-close" aria-label="Close" data-profile-nudge-close>
+                    ×
+                </button>
+            </div>
+            <div class="profile-nudge-body">
+                <p>To get better matches and AI cover letters, please complete:</p>
+                <ul>
+                    {% if not personal_complete %}
+                    <li>Personal details (name & phone). <a href="{% url 'profile_edit' %}">Add now</a></li>
+                    {% endif %}
+                    {% if not preferences_complete %}
+                    <li>Job preferences / industries. <a href="{% url 'job_preference_edit' %}">Set preferences</a></li>
+                    {% endif %}
+                    {% if not documents_complete %}
+                    <li>Your CV document. <a href="{% url 'document_list' %}">Upload or manage CV</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <section class="welcome-section">
         <h1 class="welcome-title">Welcome back, {% if profile.full_name %}{{ profile.full_name }}{% else %}{{ user.email}}{% endif %}!</h1>
         <p class="welcome-subtitle">Here's what's happening with your account today.</p>
@@ -602,4 +696,29 @@
         </aside>
     </div>
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('profileNudgeModal');
+        if (!modal) return;
+
+        const closeBtn = modal.querySelector('[data-profile-nudge-close]');
+
+        function closeModal() {
+            modal.remove();
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeModal);
+        }
+
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    });
+</script>
 {% endblock %}

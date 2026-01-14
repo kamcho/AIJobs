@@ -29,23 +29,28 @@ def dashboard(request):
     
     # Recommendation logic
     recommended_jobs = JobListing.objects.none()
+    preferences_complete = False
     if profile and profile.preferred_categories.exists():
+        preferences_complete = True
         recommended_jobs = JobListing.objects.filter(
             category__in=profile.preferred_categories.all()
         ).exclude(applications__user=user).order_by('-posted_at')[:4]
 
     # Completion logic
     personal_complete = (
-        profile is not None and bool(getattr(profile, "full_name", "")) and bool(getattr(profile, "phone_primary", ""))
+        profile is not None
+        and bool(getattr(profile, "full_name", ""))
+        and bool(getattr(profile, "phone_primary", ""))
     )
     documents_complete = cv_documents.exists()
 
     steps = [
-        personal_complete,  # Personal Info
-        educations.exists(),  # Education
+        personal_complete,      # Personal Info
+        educations.exists(),    # Education
         work_experiences.exists(),  # Work Experience
-        skills.exists(),  # Skills
-        documents_complete,  # Documents (CV present)
+        skills.exists(),        # Skills
+        documents_complete,     # Documents (CV present)
+        preferences_complete,   # Job Preferences
     ]
     completion_percentage = int((sum(steps) / len(steps)) * 100) if steps else 0
 
@@ -64,5 +69,9 @@ def dashboard(request):
         'recommended_jobs': recommended_jobs,
         'personal_complete': personal_complete,
         'documents_complete': documents_complete,
+        'preferences_complete': preferences_complete,
+        'show_profile_nudge_modal': (
+            not personal_complete or not documents_complete or not preferences_complete
+        ),
     }
     return render(request, 'home/dashboard.html', context)
