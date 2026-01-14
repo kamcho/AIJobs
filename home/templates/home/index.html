@@ -29,6 +29,7 @@
                     relevant engineering jobs for you—while you sleep.
                 </p>
                 <div class="hero-cta-group">
+                    <a href="{% url 'privacy_policy' %}" style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
                     {% if user.is_authenticated %}
                     <a href="{% url 'dashboard' %}" class="btn btn-primary">
                         Go to Dashboard
