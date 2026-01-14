@@ -6,6 +6,10 @@ from jobs.models import Application, JobListing
 def index(request):
     return render(request, 'home/index.html')
 
+
+def privacy_policy(request):
+    return render(request, 'home/privacy_policy.html')
+
 @login_required
 def dashboard(request):
     user = request.user
@@ -30,13 +34,18 @@ def dashboard(request):
             category__in=profile.preferred_categories.all()
         ).exclude(applications__user=user).order_by('-posted_at')[:4]
 
-    # Calculate completion percentage
+    # Completion logic
+    personal_complete = (
+        profile is not None and bool(getattr(profile, "full_name", "")) and bool(getattr(profile, "phone_primary", ""))
+    )
+    documents_complete = cv_documents.exists()
+
     steps = [
-        profile is not None and bool(profile.full_name), # Personal Info
-        educations.exists(), # Education
-        work_experiences.exists(), # Work Experience
-        skills.exists(), # Skills
-        all_documents.exists(), # Documents (CV or Certs)
+        personal_complete,  # Personal Info
+        educations.exists(),  # Education
+        work_experiences.exists(),  # Work Experience
+        skills.exists(),  # Skills
+        documents_complete,  # Documents (CV present)
     ]
     completion_percentage = int((sum(steps) / len(steps)) * 100) if steps else 0
 
@@ -53,5 +62,7 @@ def dashboard(request):
         'educations': educations,
         'completion_percentage': completion_percentage,
         'recommended_jobs': recommended_jobs,
+        'personal_complete': personal_complete,
+        'documents_complete': documents_complete,
     }
     return render(request, 'home/dashboard.html', context)

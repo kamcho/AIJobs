@@ -37,7 +37,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {email}.")
-                return redirect('index')
+                return redirect('job_list')
             else:
                 messages.error(request, "Invalid email or password.")
         else:

@@ -523,7 +523,7 @@
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if profile.full_name %}✓{% else %}○{% endif%}</span> Personal</span>
+                        <span class="item-label"><span class="check-icon">{% if personal_complete %}✓{% else %}○{% endif%}</span> Personal</span>
                         <a href="{% url 'profile_edit' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
@@ -541,7 +541,7 @@
                         <a href="{% url 'skill_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if all_documents %}✓{% else %}○{% endif  %}</span> Documents</span>
+                        <span class="item-label"><span class="check-icon">{% if documents_complete %}✓{% else %}○{% endif  %}</span> Documents</span>
                         <a href="{% url 'document_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                 </div>

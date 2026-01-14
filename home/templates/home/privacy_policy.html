@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .privacy-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px 48px;
+    }
+
+    .privacy-header {
+        margin-bottom: 24px;
+    }
+
+    .privacy-title {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+    }
+
+    .privacy-section {
+        background: var(--bg-card);
+        border-radius: 18px;
+        border: 1px solid var(--border-color);
+        padding: 24px 24px 16px;
+        margin-bottom: 16px;
+    }
+
+    .privacy-section h2 {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        margin-bottom: 8px;
+    }
+
+    .privacy-section p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin-bottom: 8px;
+    }
+
+    .privacy-section ul {
+        margin: 0 0 8px 18px;
+        padding: 0;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .privacy-section li {
+        margin-bottom: 4px;
+    }
+
+    @media (max-width: 640px) {
+        .privacy-container {
+            margin: 24px auto 32px;
+            padding: 0 16px;
+        }
+
+        .privacy-title {
+            font-size: 1.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="privacy-container">
+    <header class="privacy-header">
+        <h1 class="privacy-title">Privacy Policy</h1>
+        <p style="color: var(--text-muted); max-width: 640px;">
+            We respect your privacy. This page explains what data we collect, how we use it, and your rights to request
+            deletion.
+        </p>
+    </header>
+
+    <section class="privacy-section">
+        <h2>What data we collect</h2>
+        <p>When you use FindAJob.ai, we may collect and store information such as:</p>
+        <ul>
+            <li>Your account details (email and basic profile information).</li>
+            <li>Your CV / uploaded documents and extracted text.</li>
+            <li>Your job preferences, work experience, education, and skills.</li>
+            <li>Job applications and AI-generated content like cover letters.</li>
+        </ul>
+    </section>
+
+    <section class="privacy-section">
+        <h2>How we use your data</h2>
+        <p>
+            The data we collect is used <strong>only</strong> to:
+        </p>
+        <ul>
+            <li>Generate and improve AI-based cover letters for your applications.</li>
+            <li>Match you with relevant job listings and personalize recommendations.</li>
+        </ul>
+        <p>
+            We do <strong>not</strong> sell your personal data or use it for unrelated advertising. Any processing is
+            strictly to help you design better applications and find better job matches.
+        </p>
+    </section>
+
+    <section class="privacy-section">
+        <h2>Data retention and deletion</h2>
+        <p>
+            You remain in control of your data. You can delete many items (such as documents and profile details)
+            directly in the app. If you would like your account and associated data to be fully removed from our
+            systems, you can request deletion at any time.
+        </p>
+        <p>
+            To request deletion, please contact our support team using the email associated with your account. Once we
+            verify your identity, we will delete your data within a reasonable timeframe, except where we are legally
+            required to retain certain records (for example, payment records).
+        </p>
+    </section>
+
+    <section class="privacy-section">
+        <h2>Contact</h2>
+        <p>
+            If you have any questions about this Privacy Policy or how your data is handled, please reach out to our
+            support team via the contact details provided in the app or on our landing page.
+        </p>
+    </section>
+</main>
+{% endblock %}
+
