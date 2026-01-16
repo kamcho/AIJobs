@@ -30,3 +30,6 @@ tqdm==4.67.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.6.3
+django-q2==1.7.5
+django-picklefield==3.2.0
+croniter==3.0.3
