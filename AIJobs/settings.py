@@ -205,6 +205,7 @@ ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 SOCIALACCOUNT_ADAPTER = 'users.adapter.CustomSocialAccountAdapter'
 SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -215,7 +216,6 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'AUTH_PARAMS': {
             'access_type': 'offline',
-            'prompt': 'consent',
         }
     }
 }
