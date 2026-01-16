@@ -26,4 +26,9 @@ urlpatterns = [
     path('documents/delete/<int:pk>/', views.document_delete, name='document_delete'),
     path('subscription/', views.subscription_page, name='subscription_page'),
     path('payments/', views.payment_history, name='payment_history'),
+    path('update-role/', views.update_role, name='update_role'),
+    path('notifications/', views.notifications_list, name='notifications_list'),
+    path('notifications/mark-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/toggle-pref/', views.toggle_notification_preference, name='toggle_notification_preference'),
+    path('notifications/latest/', views.get_latest_notifications, name='get_latest_notifications'),
 ]

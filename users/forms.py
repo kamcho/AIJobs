@@ -2,14 +2,29 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import MyUser, PersonalProfile, WorkExperience, Education, MySkill, UserDocument
 
-class SignupForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
+class SignupForm(forms.ModelForm):
+    role = forms.ChoiceField(label="I am a", required=True)
+    password = forms.CharField(label="Password", widget=forms.PasswordInput, min_length=4)
+
+    class Meta:
         model = MyUser
-        fields = ('email',)
+        fields = ('email', 'role',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].choices = [
+            c for c in MyUser.ROLE_CHOICES 
+            if c[0] not in ['Admin', 'None']
+        ]
+        self.fields['role'].widget.attrs.update({'class': 'form-input'})
+        self.fields['email'].widget.attrs.update({'class': 'form-input'})
+        # Applying same class as email/role for consistency
+        self.fields['password'].widget.attrs.update({'class': 'form-input'})
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.role = 'Job Seeker'
+        user.role = self.cleaned_data['role']
+        user.set_password(self.cleaned_data['password'])
         if commit:
             user.save()
         return user

@@ -143,6 +143,129 @@
             transform: translateY(0);
         }
 
+        /* Notification Styling */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-nav);
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 320px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            color: var(--text-main);
+        }
+
+        .notification-bell:hover .notification-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pref-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #475569;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -433,16 +556,60 @@
                     </svg>
                     <span>Home</span>
                 </a>
-                <a href="https://jobmatch.arrotechsolutions.com/privacy-policy/">Privacy Policy</a>
+                {% if not user.is_authenticated %}
+                <a href="https://jobmatch.arrotechsolutions.com/privacy-policy/" class="nav-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Privacy Policy</span>
+                </a>
+                {% endif %}
 
                 {% if user.is_authenticated %}
+                <div class="notification-bell">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <div id="notif-badge" class="notification-badge" {% if unread_notifications_count == 0%}style="display: none;" {% endif %}>{{ unread_notifications_count }}</div>
+
+                    <div class="notification-dropdown">
+                        <div class="notification-header">
+                            <span style="font-weight: 700;">Alert Controls</span>
+                            <a href="/auth/notifications/" style="font-size: 0.8rem; color: var(--primary);">View
+                                All</a>
+                        </div>
+                        <div class="pref-item">
+                            <span>Email Alerts</span>
+                            <label class="switch">
+                                <input type="checkbox" id="email-toggle" {% if user.notification_preferences.email_enabled %}checked{% endif %}
+                                    onchange="updatePref('email', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="pref-item">
+                            <span>WhatsApp Alerts</span>
+                            <label class="switch">
+                                <input type="checkbox" id="whatsapp-toggle" {% if user.notification_preferences.whatsapp_enabled %}checked{% endif %}
+                                    onchange="updatePref('whatsapp', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div id="recent-notifications" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Tiny preview items could go here via JS -->
+                        </div>
+                    </div>
+                </div>
+
                 <a href="{% url 'job_list' %}" class="nav-link {% if 'job' in request.path %}active{% endif %}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                     </svg>
-                    <span>Jobs</span>
+                    <span>{% if user.role == 'Attachment' %}Attachments{% else %}Jobs{% endif %}</span>
                 </a>
 
                 <a href="{% url 'dashboard' %}"
@@ -469,20 +636,18 @@
                 </a>
 
                 {% if user.role == 'Admin' %}
-         
                 <a href="{% url 'create_company' %}"
-    class="nav-link {% if request.resolver_match.url_name == 'create_company' %}active{% endif %}"
-    style="color: #60a5fa; font-weight: 600;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="12" y1="8" x2="12" y2="16"></line>
-        <line x1="8" y1="12" x2="16" y2="12"></line>
-    </svg>
-    <span>Add Company</span>
-</a>
+                    class="nav-link {% if request.resolver_match.url_name == 'create_company' %}active{% endif %}"
+                    style="color: #60a5fa; font-weight: 600;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <span>Add Company</span>
+                </a>
                 {% endif %}
-
                 <a href="{% url 'subscription_page' %}"
                     class="nav-link {% if 'subscription' in request.path %}active{% endif %}"
                     style="color: #fbbf24; font-weight: 700;">
@@ -566,6 +731,162 @@
 
     {% block content %}{% endblock %}
 
+    {% if user.is_authenticated and user.role == "None" %}
+    <style>
+        .role-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .role-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .role-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-align: left;
+            position: relative;
+        }
+
+        .role-option:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .role-option input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .role-option input[type="radio"]:checked {
+            border-color: var(--primary);
+            border-width: 6px;
+        }
+
+        .role-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        .role-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .continue-btn:hover {
+            background: #2563eb;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+
+    <div class="role-modal-backdrop">
+        <div class="role-modal">
+            <div
+                style="width: 64px; height: 64px; background: rgba(59, 130, 246, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+
+            <h2 style="font-family: var(--font-heading); font-size: 1.75rem; margin-bottom: 12px;">Welcome to
+                FindAJob.ai</h2>
+            <p style="color: var(--text-muted); margin-bottom: 32px; font-size: 1.05rem;">To personalize your
+                experience, please tell us how you plan to use the platform.</p>
+
+            <form action="{% url 'update_role' %}" method="POST">
+                {% csrf_token %}
+
+                <label class="role-option">
+                    <input type="radio" name="role" value="Job Seeker" checked>
+                    <div class="role-info">
+                        <h3>I am a Job Seeker</h3>
+                        <p>I'm looking for job opportunities and career growth.</p>
+                    </div>
+                </label>
+
+                <label class="role-option">
+                    <input type="radio" name="role" value="Employer">
+                    <div class="role-info">
+                        <h3>I am an Employer</h3>
+                        <p>I want to post jobs and find great talent.</p>
+                    </div>
+                </label>
+
+                <label class="role-option">
+                    <input type="radio" name="role" value="Attachment">
+                    <div class="role-info">
+                        <h3>I am looking for Attachment</h3>
+                        <p>I am a student looking for industrial attachment.</p>
+                    </div>
+                </label>
+
+                <button type="submit" class="continue-btn">Continue to Dashboard</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Auto-dismiss messages after 5 seconds
@@ -589,6 +910,372 @@
             }
         });
     </script>
+    <!-- AI Chat Assistant Widget -->
+    <div id="ai-chat-widget">
+        <!-- Chat Button -->
+        <button id="ai-chat-toggle" aria-label="Open AI Assistant">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="ai-chat-window" class="hidden">
+            <div class="chat-header">
+                <h3>FindAJob Assistant</h3>
+                <button id="ai-chat-close" aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="chat-messages">
+                <div class="message-bubble system">
+                    Hello! I'm your AI assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                <button id="chat-send">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #ai-chat-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            font-family: var(--font-body);
+        }
+
+        #ai-chat-toggle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #ai-chat-toggle:hover {
+            transform: scale(1.1);
+            background: #2563eb;
+        }
+
+        #ai-chat-window {
+            position: absolute;
+            bottom: 72px;
+            right: 0;
+            width: 320px;
+            height: 450px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            opacity: 1;
+            transform: scale(1);
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        #ai-chat-window.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .chat-header {
+            padding: 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        #ai-chat-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        #ai-chat-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        #chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message-bubble.system {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom-left-radius: 4px;
+            color: var(--text-main);
+            align-self: flex-start;
+        }
+
+        .message-bubble.user {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .message-bubble.loading {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            align-self: flex-start;
+            font-style: italic;
+            font-size: 0.8rem;
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        #chat-input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #chat-send {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #chat-send:active {
+            transform: scale(0.95);
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('ai-chat-toggle');
+            const closeBtn = document.getElementById('ai-chat-close');
+            const chatWindow = document.getElementById('ai-chat-window');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('chat-send');
+            const messagesContainer = document.getElementById('chat-messages');
+
+            function toggleChat() {
+                chatWindow.classList.toggle('hidden');
+                if (!chatWindow.classList.contains('hidden')) {
+                    chatInput.focus();
+                }
+            }
+
+            toggleBtn.addEventListener('click', toggleChat);
+            closeBtn.addEventListener('click', toggleChat);
+
+            function appendMessage(text, type) {
+                const bubble = document.createElement('div');
+                bubble.className = `message-bubble ${type}`;
+                bubble.textContent = text;
+                messagesContainer.appendChild(bubble);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            async function sendMessage() {
+                const text = chatInput.value.trim();
+                if (!text) return;
+
+                appendMessage(text, 'user');
+                chatInput.value = '';
+
+                // Show loading state
+                const loadingBubble = document.createElement('div');
+                loadingBubble.className = 'message-bubble loading';
+                loadingBubble.textContent = 'Thinking...';
+                messagesContainer.appendChild(loadingBubble);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                try {
+                    const response = await fetch('/ai-chat/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ message: text })
+                    });
+
+                    const data = await response.json();
+
+                    // Remove loading bubble
+                    messagesContainer.removeChild(loadingBubble);
+
+                    if (data.response) {
+                        appendMessage(data.response, 'system');
+                    } else if (data.error) {
+                        appendMessage('Error: ' + data.error, 'system');
+                    }
+                } catch (error) {
+                    messagesContainer.removeChild(loadingBubble);
+                    appendMessage('Sorry, something went wrong. Please try again.', 'system');
+                }
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            {% if user.is_authenticated %}
+            // Load history for authenticated users
+            async function loadHistory() {
+                try {
+                    const response = await fetch('/chat-history/');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.history && data.history.length > 0) {
+                            // Clear initial messages if any (optional)
+                            // messagesContainer.innerHTML = ''; 
+                            data.history.forEach(msg => {
+                                appendMessage(msg.content, msg.role === 'user' ? 'user' : 'system');
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Could not load chat history", e);
+                }
+            }
+            loadHistory();
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            // Fetch and update notifications
+            async function fetchLatestNotifications() {
+                try {
+                    const response = await fetch('/auth/notifications/latest/');
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        // Update Badge
+                        const badge = document.getElementById('notif-badge');
+                        if (badge) {
+                            if (data.unread_count > 0) {
+                                badge.textContent = data.unread_count;
+                                badge.style.display = 'flex';
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+
+                        // Update Dropdown Preview
+                        const container = document.getElementById('recent-notifications');
+                        if (container) {
+                            if (data.notifications && data.notifications.length > 0) {
+                                container.innerHTML = data.notifications.map(n => `
+                                    <a href="${n.job_url}" class="dropdown-item ${n.is_read ? '' : 'unread'}" style="flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 16px;">
+                                        <div style="font-size: 0.85rem; color: ${n.is_read ? 'var(--text-muted)' : 'var(--text-main)'}; font-weight: ${n.is_read ? '400' : '600'}; line-height: 1.2;">
+                                            ${n.message}
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.7;">
+                                            ${n.created_at}
+                                        </div>
+                                    </a>
+                                `).join('');
+                            } else {
+                                container.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No recent notifications</div>';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error fetching notifications:", e);
+                }
+            }
+
+            // Initial fetch and poll every 60 seconds
+            fetchLatestNotifications();
+            setInterval(fetchLatestNotifications, 60000);
+
+            async function updatePref(type, enabled) {
+                try {
+                    const response = await fetch('/auth/notifications/toggle-pref/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ type: type, enabled: enabled })
+                    });
+                    if (response.ok) {
+                        fetchLatestNotifications(); // Refresh to ensure sync
+                    }
+                } catch (e) { console.error(e); }
+            }
+            {% endif %}
+        });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 

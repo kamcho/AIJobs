@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class MyUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -26,6 +29,9 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = (
         ('Admin', 'Admin'),
         ('Job Seeker', 'Job Seeker'),
+        ('Employer', 'Employer'),
+        ('Attachment', 'Attachment'),
+        ('None', 'None')
     )
 
     email = models.EmailField(unique=True)
@@ -66,6 +72,32 @@ class PersonalProfile(models.Model):
 
     def __str__(self):
         return f"{self.full_name} ({self.user.email})"
+
+class NotificationPreference(models.Model):
+    user = models.OneToOneField(MyUser, on_delete=models.CASCADE, related_name='notification_preferences')
+    email_enabled = models.BooleanField(default=True)
+    whatsapp_enabled = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"Prefs for {self.user.email}"
+
+class UserNotification(models.Model):
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='notifications')
+    job = models.ForeignKey('jobs.JobListing', on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.email}: {self.job.title}"
+
+@receiver(post_save, sender=MyUser)
+def create_notification_preferences(sender, instance, created, **kwargs):
+    if created:
+        NotificationPreference.objects.get_or_create(user=instance)
 
 class DocumentType(models.Model):
     name = models.CharField(max_length=50, unique=True)

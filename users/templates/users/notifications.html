@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - FindAJob.ai{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 font-weight-bold mb-0">Notifications</h1>
+            <span class="badge badge-primary badge-pill">{{ notifications.count }} Total</span>
+        </div>
+
+        {% if notifications %}
+        <div class="notification-list">
+            {% for n in notifications %}
+            <div class="notification-item {% if not n.is_read %}unread{% endif %}" data-id="{{ n.id }}">
+                <div class="notification-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </div>
+                <div class="notification-body">
+                    <div class="notification-text">{{ n.message }}</div>
+                    <div class="notification-time">{{ n.created_at|timesince }} ago</div>
+                </div>
+                {% if not n.is_read %}
+                <button class="mark-read-btn" onclick="markRead({{ n.id }}, this)">Mark as read</button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-notifications text-center py-5">
+            <div class="mb-3">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1"
+                    style="opacity: 0.3;">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+            </div>
+            <h4>All clear!</h4>
+            <p class="text-muted">You have no job notifications at the moment.</p>
+            <a href="{% url 'job_list' %}" class="btn btn-primary mt-3">Browse Jobs</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .notifications-page {
+        min-height: 80vh;
+        background: var(--bg-main);
+    }
+
+    .notification-list {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .notification-item {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s;
+        gap: 20px;
+    }
+
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+
+    .notification-item.unread {
+        background: rgba(59, 130, 246, 0.05);
+        border-left: 4px solid var(--primary);
+    }
+
+    .notification-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+    }
+
+    .notification-body {
+        flex: 1;
+    }
+
+    .notification-text {
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: var(--text-main);
+    }
+
+    .notification-time {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .mark-read-btn {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .mark-read-btn:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+</style>
+
+<script>
+    async function markRead(id, btn) {
+        try {
+            const response = await fetch(`/notifications/mark-read/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                const item = btn.closest('.notification-item');
+                item.classList.remove('unread');
+                btn.remove();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,5 +1,6 @@
 import json
 import datetime
+from home.models import AIChatMessage
 from openai import OpenAI
 from django.conf import settings
 
@@ -149,3 +150,49 @@ class AIService:
         except Exception as e:
             print(f"Error in cover letter generation: {str(e)}")
             return f"Error generating cover letter: {str(e)}"
+
+    @staticmethod
+    def chat(user, message):
+        """
+        Handles general chat interactions for the AI assistant.
+        """
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if not api_key:
+            return "AI Service is currently unavailable."
+            
+        client = OpenAI(api_key=api_key)
+        
+        # Build context
+        context_prompt = f"""
+        You are 'FindAJob Assistant', a helpful AI assistant embedded in the FindAJob.ai platform.
+        Current User: {user.email if user.is_authenticated else 'Guest'}
+        Role: {getattr(user, 'role', 'Visitor') if user.is_authenticated else 'Visitor'}
+        
+        Your goal is to help users navigate the site, understand features (job search, CV analysis, cover letter generation), and provide career advice.
+        Keep responses concise, helpful, and friendly.
+        """
+        
+        # Build message chain
+        messages = [{"role": "system", "content": context_prompt}]
+        
+        # Add history if user is authenticated
+        if user.is_authenticated:
+            past_messages = AIChatMessage.objects.filter(user=user).order_by('-timestamp')[:6]
+            # Reverse because we fetched latest first, but OpenAI needs chronological
+            for msg in reversed(past_messages):
+                messages.append({"role": msg.role, "content": msg.content})
+        
+        # Add current message
+        messages.append({"role": "user", "content": message})
+        
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=300
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"Error in chat: {str(e)}")
+            return "I'm having trouble connecting right now. Please try again later."

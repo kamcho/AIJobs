@@ -15,6 +15,10 @@ def job_list(request):
     category_id = request.GET.get('category', '')
     
     jobs = JobListing.objects.all().order_by('-posted_at')
+
+    # Filter for Attachment role
+    if request.user.is_authenticated and request.user.role == 'Attachment':
+        jobs = jobs.filter(terms='Attachment')
     
     # Filter by preferences if no category is selected and user is authenticated
     if not category_id and not query and request.user.is_authenticated:

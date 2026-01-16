@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.urls import reverse
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,21 +12,33 @@ from .forms import (
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .mpesa_service import MpesaService
-from .models import PersonalProfile, MyUser, WorkExperience, Education, MySkill, UserDocument, CVAnalysis, Subscription, MpesaTransaction
+from .models import (
+    PersonalProfile, MyUser, WorkExperience, Education, MySkill, 
+    UserDocument, CVAnalysis, Subscription, MpesaTransaction,
+    NotificationPreference, UserNotification
+)
 from home.services import TextExtractor
 from home.ai_service import AIService
+
+from django.contrib.auth.backends import ModelBackend
 
 def signup(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
+
+            # 🔑 REQUIRED when multiple auth backends exist
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+
             login(request, user)
+
             messages.success(request, "Registration successful.")
             return redirect('index')
         messages.error(request, "Unsuccessful registration. Invalid information.")
     else:
         form = SignupForm()
+
     return render(request, 'users/signup.html', {'form': form})
 
 def login_view(request):
@@ -33,7 +47,9 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(email=email, password=password)
+
+            user = authenticate(request, email=email, password=password)
+
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {email}.")
@@ -44,8 +60,8 @@ def login_view(request):
             messages.error(request, "Invalid email or password.")
     else:
         form = LoginForm()
-    return render(request, 'users/login.html', {'form': form})
 
+    return render(request, 'users/login.html', {'form': form})
 def logout_view(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
@@ -367,4 +383,66 @@ def mpesa_callback(request):
 @login_required
 def payment_history(request):
     transactions = request.user.mpesa_transactions.all().order_by('-created_at')
-    return render(request, 'users/payment_history.html', {'transactions': transactions})
+@login_required
+def update_role(request):
+    if request.method == 'POST':
+        role = request.POST.get('role')
+        valid_roles = [c[0] for c in MyUser.ROLE_CHOICES if c[0] not in ['Admin', 'None']]
+        
+        if role in valid_roles:
+            request.user.role = role
+            request.user.save()
+            messages.success(request, f"Role updated to {role}.")
+            return redirect(request.META.get('HTTP_REFERER', 'index'))
+        else:
+            messages.error(request, "Invalid role selected.")
+            
+    return redirect('index')
+
+@login_required
+def notifications_list(request):
+    notifications = request.user.notifications.all()
+    return render(request, 'users/notifications.html', {'notifications': notifications})
+
+@login_required
+@csrf_exempt # Using CSRF token in fetch, but exempt for simplicity if needed, better to handle in JS
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(UserNotification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'status': 'success'})
+
+@login_required
+@csrf_exempt
+def toggle_notification_preference(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            pref_type = data.get('type') # 'email' or 'whatsapp'
+            enabled = data.get('enabled', True)
+            
+            prefs, created = NotificationPreference.objects.get_or_create(user=request.user)
+            
+            if pref_type == 'email':
+                prefs.email_enabled = enabled
+            elif pref_type == 'whatsapp':
+                prefs.whatsapp_enabled = enabled
+                
+            prefs.save()
+            return JsonResponse({'status': 'success', 'pref': pref_type, 'enabled': enabled})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+@login_required
+def get_latest_notifications(request):
+    notifications = request.user.notifications.all()[:5]
+    data = []
+    for n in notifications:
+        data.append({
+            'id': n.id,
+            'message': n.message,
+            'is_read': n.is_read,
+            'created_at': n.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'job_url': reverse('job_detail', args=[n.job.id]) if n.job else '#'
+        })
+    return JsonResponse({'notifications': data, 'unread_count': request.user.notifications.filter(is_read=False).count()})

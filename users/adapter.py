@@ -10,6 +10,10 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         """
         user = super().save_user(request, sociallogin, form)
         
+        # Force role to None for new social users so they must select it
+        user.role = 'None'
+        user.save()
+        
         # Get extra data from sociallogin
         data = sociallogin.account.extra_data
         print(f"DEBUG: save_user extra_data: {data}")

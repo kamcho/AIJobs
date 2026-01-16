@@ -1,136 +1,319 @@
 {% extends 'base.html' %}
 {% load socialaccount %}
 
-{% block title %}Sign Up - FindAJob.ai{% endblock %}
+{% block title %}Sign Up - Join FindAJob.ai{% endblock %}
 
 {% block extra_css %}
 <style>
-    .auth-container {
-        min-height: calc(100vh - 100px);
+    /* Reset default base container styles if necessary for full width */
+    .auth-page-wrapper {
+        min-height: calc(100vh - 80px);
+        /* Adjust for header if sticky */
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: var(--bg-body);
+        overflow: hidden;
+    }
+
+    /* Left Panel: Visuals & Branding */
+    .auth-visual-panel {
+        position: relative;
+        background: radial-gradient(circle at top right, #4338ca, #312e81);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 60px;
+        color: white;
+        overflow: hidden;
+    }
+
+    /* Decorative shapes */
+    .auth-visual-panel::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+        border-radius: 50%;
+        filter: blur(60px);
+    }
+
+    .auth-visual-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -20%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
+        border-radius: 50%;
+        filter: blur(80px);
+    }
+
+    .visual-content {
+        position: relative;
+        z-index: 10;
+        max-width: 480px;
+    }
+
+    .visual-heading {
+        font-family: var(--font-heading);
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+    }
+
+    .visual-text {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+        margin-bottom: 40px;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 40px 20px;
-        background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 400px),
-            radial-gradient(circle at bottom left, rgba(79, 70, 229, 0.1), transparent 400px);
+        color: white;
     }
 
-    .auth-card {
-        width: 100%;
-        max-width: 450px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
+    /* Right Panel: Form */
+    .auth-form-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 40px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        background: var(--bg-body);
+        position: relative;
     }
 
-    .auth-header {
-        text-align: center;
-        margin-bottom: 32px;
+    .form-container {
+        width: 100%;
+        max-width: 480px;
     }
 
-    .auth-title {
+    .form-header {
+        margin-bottom: 40px;
+    }
+
+    .form-title {
         font-family: var(--font-heading);
-        font-size: 2rem;
+        font-size: 2.25rem;
         font-weight: 700;
-        margin-bottom: 8px;
+        color: white;
+        margin-bottom: 12px;
     }
 
-    .auth-subtitle {
+    .form-subtitle {
         color: var(--text-muted);
-        font-size: 0.95rem;
+        font-size: 1.1rem;
     }
 
-    .form-group {
-        margin-bottom: 20px;
+    /* Form Styles */
+    .modern-form .form-group {
+        margin-bottom: 24px;
     }
 
-    .form-group label {
+    .modern-form label {
         display: block;
-        margin-bottom: 8px;
         font-size: 0.9rem;
         font-weight: 500;
-        color: #e2e8f0;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .form-group input,
-    .form-group select {
+    .modern-form input,
+    .modern-form select {
         width: 100%;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.05);
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
         color: white;
+        font-size: 1rem;
         font-family: inherit;
-        transition: all 0.2s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .form-group input:focus {
+    .modern-form input:focus,
+    .modern-form select:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     }
 
-    .btn-full {
+    .btn-primary-large {
         width: 100%;
-        margin-top: 12px;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 16px;
     }
 
-    .auth-footer {
-        margin-top: 24px;
+    .btn-primary-large:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Google Button */
+    .social-divider {
+        display: flex;
+        align-items: center;
         text-align: center;
+        margin: 40px 0;
+        color: var(--text-muted);
         font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .social-divider::before,
+    .social-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .social-divider span {
+        padding: 0 16px;
+    }
+
+    .btn-google-modern {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: white;
+        color: #1f2937;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .btn-google-modern:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+    }
+
+    .login-link {
+        margin-top: 32px;
+        text-align: center;
         color: var(--text-muted);
     }
 
-    .auth-footer a {
+    .login-link a {
         color: var(--primary);
         text-decoration: none;
         font-weight: 600;
+        margin-left: 4px;
     }
 
     .errorlist {
+        color: #ef4444;
         list-style: none;
         padding: 0;
-        color: #ef4444;
-        font-size: 0.85rem;
-        margin-top: 4px;
+        margin: 4px 0 0;
+        font-size: 0.9rem;
+    }
+
+    /* Tablet & Mobile Responsiveness */
+    @media (max-width: 992px) {
+        .auth-page-wrapper {
+            grid-template-columns: 1fr;
+            min-height: auto;
+        }
+
+        .auth-visual-panel {
+            padding: 40px;
+            min-height: 400px;
+        }
+
+        .visual-heading {
+            font-size: 2.5rem;
+        }
+
+        .auth-form-panel {
+            padding: 40px 24px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1 class="auth-title">Create Account</h1>
-            <p class="auth-subtitle">Start your journey to automation</p>
+<div class="auth-page-wrapper">
+    <!-- Left: Branding -->
+    <div class="auth-visual-panel">
+        <div class="visual-content">
+            <h1 class="visual-heading">Start your career journey today.</h1>
+            <p class="visual-text">Join thousands of professionals finding their dream jobs with AI-powered matching.
+            </p>
+
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <span class="feature-icon">✨</span>
+                    AI-Powered CV Analysis
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    Smart Job Matching
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">📝</span>
+                    Instant Cover Letters
+                </li>
+            </ul>
         </div>
+    </div>
 
-        <form method="POST">
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                {{ field.errors }}
-                {% endif %}
-                {% if field.help_text %}
-                <p class="auth-subtitle" style="font-size: 0.75rem; margin-top: 4px;">{{ field.help_text|safe }}</p>
-                {% endif %}
+    <!-- Right: Form -->
+    <div class="auth-form-panel">
+        <div class="form-container">
+            <div class="form-header">
+                <h2 class="form-title">Create Account</h2>
+                <p class="form-subtitle">Enter your details significantly faster.</p>
             </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
-        </form>
 
-        <div class="social-divider">Or continue with</div>
-
-        <div class="social-auth">
-            <a href="{% provider_login_url 'google' %}" class="btn btn-google btn-full">
+            <a href="{% provider_login_url 'google' %}" class="btn-google-modern">
                 <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -147,10 +330,37 @@
                 </svg>
                 Sign up with Google
             </a>
-        </div>
 
-        <div class="auth-footer">
-            Already have an account? <a href="{% url 'login' %}">Log In</a>
+            <div class="social-divider">
+                <span>Or register with email</span>
+            </div>
+
+            <form method="POST" class="modern-form">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">{{ field.help_text|safe }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-primary-large">Create Account</button>
+            </form>
+
+            <div class="login-link">
+                Already have an account? <a href="{% url 'login' %}">Log In</a>
+            </div>
         </div>
     </div>
 </div>

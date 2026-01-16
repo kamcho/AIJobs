@@ -41,7 +41,7 @@ class JobListingForm(forms.ModelForm):
     class Meta:
         model = JobListing
         fields = [
-            'title', 'category', 'company', 'company_profile', 'description', 
+            'title', 'category', 'terms', 'company', 'company_profile', 'description', 
             'location', 'url', 'education_level_required', 
             'experience_required_years', 'employer_email', 'expiry_date'
         ]

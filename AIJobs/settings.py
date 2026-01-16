@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'django_q',
 ]
 
 AUTH_USER_MODEL = 'users.MyUser'
@@ -83,6 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'users.context_processors.notification_count',
             ],
         },
     },
@@ -126,16 +128,10 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'OPTIONS': {
+            'min_length': 4,
+        }
     },
 ]
 
@@ -215,7 +211,7 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': [
             'profile',
             'email',
-            'https://www.googleapis.com/auth/gmail.send',
+            # 'https://www.googleapis.com/auth/gmail.send',
         ],
         'AUTH_PARAMS': {
             'access_type': 'offline',
@@ -235,3 +231,16 @@ MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
 MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE')
 MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL')
 MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox') # sandbox or production
+
+# Django-Q Configuration
+Q_CLUSTER = {
+    'name': 'AIJobs',
+    'workers': 4,
+    'recycle': 500,
+    'timeout': 60,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'label': 'Django Q',
+    'orm': 'default',  # Use the ORM as the broker
+}

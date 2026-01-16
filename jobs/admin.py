@@ -11,7 +11,7 @@ class JobRequirementInline(admin.TabularInline):
 
 @admin.register(JobListing)
 class JobListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'company', 'category', 'location', 'posted_at')
+    list_display = ('title', 'company', 'category', 'terms', 'location', 'posted_at')
     list_filter = ('category', 'location', 'posted_at')
     search_fields = ('title', 'company', 'description')
     inlines = [JobRequirementInline]

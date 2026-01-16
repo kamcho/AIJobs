@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from users.models import PersonalProfile, MySkill, UserDocument
+from .models import AIChatMessage
 from jobs.models import Application, JobListing
 
 def index(request):
@@ -75,3 +76,41 @@ def dashboard(request):
         ),
     }
     return render(request, 'home/dashboard.html', context)
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .ai_service import AIService
+
+@csrf_exempt
+def ai_chat(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            message = data.get('message')
+            if not message:
+                return JsonResponse({'error': 'Message required'}, status=400)
+            
+            # Save user message
+            if request.user.is_authenticated:
+                AIChatMessage.objects.create(user=request.user, role='user', content=message)
+                
+            response = AIService.chat(request.user, message)
+            
+            # Save assistant response
+            if request.user.is_authenticated:
+                AIChatMessage.objects.create(user=request.user, role='assistant', content=response)
+                
+            return JsonResponse({'response': response})
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required
+def chat_history(request):
+    messages = AIChatMessage.objects.filter(user=request.user).order_by('timestamp')[:50]
+    history = [
+        {'role': msg.role, 'content': msg.content}
+        for msg in messages
+    ]
+    return JsonResponse({'history': history})

@@ -1,5 +1,8 @@
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django_q.tasks import async_task
 
 class JobCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -39,7 +42,16 @@ class JobListing(models.Model):
         ('University', 'University'),
         ('None', 'None'),
     )
-
+    TERM_CHOICES = (
+        ('Full Time', 'Full Time'),
+        ('Part Time', 'Part Time'),
+        ('Contract', 'Contract'),
+        ('Freelance', 'Freelance'),
+        ('Internship', 'Internship'),
+        ('Attachment', 'Attachment'),
+        ('None', 'None'),
+    )
+    terms = models.CharField(max_length=255, choices=TERM_CHOICES, default='Full Time')
     title = models.CharField(max_length=255)
     category = models.ForeignKey(JobCategory, on_delete=models.CASCADE, related_name='jobs')
     company = models.CharField(max_length=255) # Deprecated, keeping for migration
@@ -91,3 +103,8 @@ class JobRequirement(models.Model):
     
     def __str__(self):
         return f"{self.description} ({'Mandatory' if self.is_mandatory else 'Optional'})"
+
+@receiver(post_save, sender=JobListing)
+def trigger_job_notifications(sender, instance, created, **kwargs):
+    if created:
+        async_task('jobs.tasks.send_job_notification_task', instance.id)

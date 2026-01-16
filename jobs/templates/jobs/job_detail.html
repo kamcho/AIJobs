@@ -191,7 +191,8 @@
             <div class="header-info">
                 <h1>{{ job.title }}</h1>
                 {% if job.company_profile %}
-                <a href="{% url 'company_detail' job.company_profile.pk %}" class="header-company" style="text-decoration: none;">
+                <a href="{% url 'company_detail' job.company_profile.pk %}" class="header-company"
+                    style="text-decoration: none;">
                     {{ job.company_profile.name }}
                 </a>
                 {% else %}
@@ -254,7 +255,7 @@
             {% endif %}
             <div class="info-row">
                 <span class="info-label">Job Type</span>
-                <span class="info-value">💼 Full-time</span>
+                <span class="info-value">💼 {{ job.get_terms_display }}</span>
             </div>
 
             <hr style="border: none; border-top: 1px solid var(--border-color); margin: 24px 0;">
@@ -265,7 +266,8 @@
                 <span style="color: var(--success); font-weight: 700;">✓ Applied</span>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Status:
                     {{ user_application.status }}</p>
-                <p style="font-size: 0.75rem; color: var(--text-muted);">Sent on {{ user_application.applied_at|date:"Md, Y" }}</p>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Sent on {{
+                    user_application.applied_at|date:"Md, Y" }}</p>
             </div>
             {% else %}
             {% if job.employer_email %}
