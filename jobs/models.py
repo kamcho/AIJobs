@@ -5,7 +5,14 @@ from django.dispatch import receiver
 from django_q.tasks import async_task
 
 class JobCategory(models.Model):
+    TYPE_CHOICES = (
+        ('white_collar', 'White Collar'),
+        ('blue_collar', 'Blue Collar'),
+        ('mixed', 'Mixed'),
+    )
     name = models.CharField(max_length=100, unique=True)
+    keywords = models.JSONField(default=list, blank=True)
+    category_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='white_collar')
 
     def __str__(self):
         return self.name
@@ -51,6 +58,13 @@ class JobListing(models.Model):
         ('Attachment', 'Attachment'),
         ('None', 'None'),
     )
+    APPLICATION_METHOD_CHOICES = (
+        ('email', 'Email Application'),
+        ('website', 'External Website'),
+        ('google_form', 'Google Form'),
+        ('other', 'Other Method'),
+    )
+    
     terms = models.CharField(max_length=255, choices=TERM_CHOICES, default='Full Time')
     title = models.CharField(max_length=255)
     category = models.ForeignKey(JobCategory, on_delete=models.CASCADE, related_name='jobs')
@@ -61,17 +75,52 @@ class JobListing(models.Model):
     url = models.URLField()
     education_level_required = models.CharField(max_length=50, choices=LEVEL_CHOICES, default='None')
     experience_required_years = models.IntegerField(blank=True, null=True)
-    employer_email = models.EmailField(blank=True, null=True, help_text="Email address to send applications to")
+    
+    # Application method fields
+    application_method = models.CharField(
+        max_length=20, 
+        choices=APPLICATION_METHOD_CHOICES, 
+        default='website',
+        help_text="How should users apply for this job?"
+    )
+    employer_email = models.EmailField(
+        blank=True, 
+        null=True, 
+        help_text="Email address to send applications to (for email method)"
+    )
+    application_url = models.URLField(
+        blank=True, 
+        null=True, 
+        help_text="External application URL (for website/Google Form methods)"
+    )
+    application_instructions = models.TextField(
+        blank=True, 
+        null=True,
+        help_text="Special instructions for applying (optional)"
+    )
+    
     expiry_date = models.DateField(blank=True, null=True)
     posted_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"
+    
+    def get_application_method_display_text(self):
+        """Returns user-friendly text for the application method"""
+        method_texts = {
+            'email': 'Apply via Email',
+            'website': 'Apply on Website',
+            'google_form': 'Apply via Google Form',
+            'other': 'Apply Now',
+        }
+        return method_texts.get(self.application_method, 'Apply Now')
+
 
 class Application(models.Model):
     STATUS_CHOICES = (
-        ('Pending', 'Pending'),
-        ('Applied', 'Applied'),
+        ('Under Review', 'Under Review'),
+        ('Shortlisted', 'Shortlisted'),
         ('Interviewing', 'Interviewing'),
         ('Rejected', 'Rejected'),
         ('Offer', 'Offer'),
@@ -79,10 +128,11 @@ class Application(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='applications')
     job = models.ForeignKey(JobListing, on_delete=models.CASCADE, related_name='applications')
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Under Review')
     applied_at = models.DateTimeField(auto_now_add=True)
     cv_used = models.ForeignKey('users.UserDocument', on_delete=models.SET_NULL, null=True, blank=True)
     cover_letter = models.FileField(upload_to='cover_letters/', blank=True, null=True)
+    cover_letter_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} - {self.job}"
@@ -103,6 +153,18 @@ class JobRequirement(models.Model):
     
     def __str__(self):
         return f"{self.description} ({'Mandatory' if self.is_mandatory else 'Optional'})"
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist')
+    job = models.ForeignKey(JobListing, on_delete=models.CASCADE, related_name='wishlisted_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+        verbose_name_plural = "Wishlists"
+
+    def __str__(self):
+        return f"{self.user.email} - {self.job.title}"
 
 @receiver(post_save, sender=JobListing)
 def trigger_job_notifications(sender, instance, created, **kwargs):

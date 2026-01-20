@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FindAJob.ai{% endblock %}</title>
+    <title>{% block title %}JobMatch{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <meta name="google-site-verification" content="hQjpB6p4laNp62UvMgcVlgY7xCAZdX6ziIAMXRuSA9Y" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -540,7 +540,7 @@
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </div>
-                <div class="logo-text">Find-A-Job</div>
+                <div class="logo-text">JobMatch</div>
             </a>
 
             <button class="mobile-menu-toggle" type="button" aria-label="Toggle navigation">
@@ -572,7 +572,7 @@
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <div id="notif-badge" class="notification-badge" {% if unread_notifications_count == 0%}style="display: none;" {% endif %}>{{ unread_notifications_count }}</div>
+                    <div id="notif-badge" class="notification-badge" {% if unread_notifications_count == 0%}style="display: none;" {% endif %}>{{ unread_notifications_count}}</div>
 
                     <div class="notification-dropdown">
                         <div class="notification-header">
@@ -633,6 +633,15 @@
                         <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                     <span>Applications</span>
+                </a>
+
+                <a href="{% url 'wishlist_list' %}"
+                    class="nav-link {% if 'wishlist' in request.path %}active{% endif %}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Saved Jobs</span>
                 </a>
 
                 {% if user.role == 'Admin' %}

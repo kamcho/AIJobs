@@ -1,11 +1,17 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from users.models import PersonalProfile, MySkill, UserDocument
 from .models import AIChatMessage
 from jobs.models import Application, JobListing
+import json
 
 def index(request):
-    return render(request, 'home/index.html')
+    latest_jobs = JobListing.objects.filter(is_active=True).order_by('-posted_at')[:6]
+    return render(request, 'home/index.html', {'latest_jobs': latest_jobs})
 
 
 def privacy_policy(request):
@@ -15,7 +21,26 @@ def privacy_policy(request):
 def dashboard(request):
     user = request.user
     
-    # Simple profile retrieval, in real app might use get_or_create or a signal
+    if user.role == 'Employer':
+        # Employer Dashboard Logic
+        company = user.company
+        my_jobs = JobListing.objects.filter(company_profile=company).order_by('-posted_at') if company else JobListing.objects.none()
+        
+        # Get applications for these jobs
+        job_ids = my_jobs.values_list('id', flat=True)
+        recent_applications = Application.objects.filter(job_id__in=job_ids).order_by('-applied_at')[:10]
+        
+        context = {
+            'company': company,
+            'my_jobs': my_jobs,
+            'recent_applications': recent_applications,
+            'total_jobs_count': my_jobs.count(),
+            'total_applications_count': Application.objects.filter(job_id__in=job_ids).count(),
+            'pending_review_count': Application.objects.filter(job_id__in=job_ids, status='Under Review').count(),
+        }
+        return render(request, 'home/employer_dashboard.html', context)
+
+    # Job Seeker Dashboard Logic (Existing)
     profile = getattr(user, 'profile', None)
     skills = user.skills.all()
     applications = user.applications.all().order_by('-applied_at')
@@ -34,6 +59,7 @@ def dashboard(request):
     if profile and profile.preferred_categories.exists():
         preferences_complete = True
         recommended_jobs = JobListing.objects.filter(
+            is_active=True,
             category__in=profile.preferred_categories.all()
         ).exclude(applications__user=user).order_by('-posted_at')[:4]
 
@@ -114,3 +140,37 @@ def chat_history(request):
         for msg in messages
     ]
     return JsonResponse({'history': history})
+@csrf_exempt
+def contact(request):
+    if request.method == 'POST':
+        try:
+            # Handle both JSON and Form data if needed, but here it looks like a standard form or simple AJAX
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                name = data.get('name')
+                email = data.get('email')
+                phone = data.get('phone')
+                message = data.get('message')
+            else:
+                name = request.POST.get('name')
+                email = request.POST.get('email')
+                phone = request.POST.get('phone')
+                message = request.POST.get('message')
+
+            if not all([name, email, phone, message]):
+                return JsonResponse({'error': 'All fields are required'}, status=400)
+
+            subject = f"Contact Form Submission from {name}"
+            email_body = f"Name: {name}\nEmail: {email}\nPhone: {phone}\n\nMessage:\n{message}"
+            
+            send_mail(
+                subject,
+                email_body,
+                settings.DEFAULT_FROM_EMAIL,
+                ['kevingitundu@gmail.com'],
+                fail_silently=False,
+            )
+            return JsonResponse({'message': 'Message sent successfully!'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)

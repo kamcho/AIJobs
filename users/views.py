@@ -19,6 +19,7 @@ from .models import (
 )
 from home.services import TextExtractor
 from home.ai_service import AIService
+from jobs.models import JobCategory
 
 from django.contrib.auth.backends import ModelBackend
 
@@ -34,7 +35,7 @@ def signup(request):
             login(request, user)
 
             messages.success(request, "Registration successful.")
-            return redirect('index')
+            return redirect('dashboard')
         messages.error(request, "Unsuccessful registration. Invalid information.")
     else:
         form = SignupForm()
@@ -53,7 +54,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {email}.")
-                return redirect('job_list')
+                return redirect('dashboard')
             else:
                 messages.error(request, "Invalid email or password.")
         else:
@@ -258,7 +259,11 @@ def document_add(request):
                 
                 # AI Analysis for CVs
                 if doc.document_type.name == 'CV':
-                    analysis_data = AIService.analyze_cv(extracted_text)
+                    # Get categories to suggest from
+                    categories = JobCategory.objects.all().values('name', 'keywords')
+                    categories_data = list(categories)
+                    
+                    analysis_data = AIService.analyze_cv(extracted_text, categories_data)
                     if analysis_data:
                         # Save total score to UserDocument
                         doc.ai_score = analysis_data.get('total_score', 0)
@@ -276,6 +281,16 @@ def document_add(request):
                             improvement_suggestions="\n".join(analysis_data.get('improvement_suggestions', [])),
                             raw_json_response=analysis_data
                         )
+                        
+                        # Automate Job Preferences
+                        suggested_category_names = analysis_data.get('suggested_categories', [])
+                        if suggested_category_names:
+                            matched_categories = JobCategory.objects.filter(name__in=suggested_category_names)
+                            if matched_categories.exists():
+                                profile, created = PersonalProfile.objects.get_or_create(user=request.user)
+                                profile.preferred_categories.add(*matched_categories)
+                                messages.info(request, f"Updated your job preferences based on your CV: {', '.join([c.name for c in matched_categories])}")
+
                         messages.success(request, f"CV uploaded and analyzed! Score: {doc.ai_score}/100")
                     else:
                         messages.warning(request, "CV uploaded and text extracted, but detailed AI analysis failed.")

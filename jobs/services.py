@@ -13,30 +13,28 @@ class EmailService:
     def send_application_email(user, job, cover_letter_file, cv_file_path=None):
         """
         Sends a job application email. 
-        Uses Gmail API if the user has a connected Google account, 
-        otherwise falls back to standard SMTP.
+        Uses Gmail API ONLY for direct 'email' method if the user has a connected Google account, 
+        otherwise falls back to standard SMTP (sending documents to the user).
         """
-        # 1. Try to get Google credentials
-        try:
-            print(f"DEBUG Email: Attempting to find Google SocialAccount for user {user.email}")
-            social_acc = SocialAccount.objects.get(user=user, provider='google')
-            social_token = SocialToken.objects.filter(account=social_acc).first()
+        # 1. Try Gmail API ONLY if the method is 'email'
+        if job.application_method == 'email':
+            try:
+                print(f"DEBUG Email: Attempting to find Google SocialAccount for user {user.email}")
+                social_acc = SocialAccount.objects.get(user=user, provider='google')
+                social_token = SocialToken.objects.filter(account=social_acc).first()
+                
+                if social_token:
+                    print(f"DEBUG Email: Found SocialToken for user. Attempting Gmail API...")
+                    social_app = SocialApp.objects.get(provider='google')
+                    return EmailService._send_via_gmail_api(user, job, cover_letter_file, social_token, social_app, cv_file_path)
+                else:
+                    print(f"DEBUG Email: No SocialToken found for user. Falling back to SMTP.")
+            except (SocialAccount.DoesNotExist, SocialApp.DoesNotExist):
+                print(f"DEBUG Email: Google integration not fully configured for user. Falling back to SMTP.")
+            except Exception as e:
+                print(f"DEBUG Email Error: Unexpected transition error: {str(e)}")
             
-            if social_token:
-                print(f"DEBUG Email: Found SocialToken for user. Attempting Gmail API...")
-                # We also need the SocialApp for client_id/secret
-                social_app = SocialApp.objects.get(provider='google')
-                return EmailService._send_via_gmail_api(user, job, cover_letter_file, social_token, social_app, cv_file_path)
-            else:
-                print(f"DEBUG Email: No SocialToken found for user. Falling back to SMTP.")
-        except SocialAccount.DoesNotExist:
-            print(f"DEBUG Email: No Google SocialAccount found for user. Falling back to SMTP.")
-        except SocialApp.DoesNotExist:
-            print(f"DEBUG Email: No Google SocialApp configured in database. Falling back to SMTP.")
-        except Exception as e:
-            print(f"DEBUG Email Error: Unexpected transition error: {str(e)}")
-            
-        # 2. Fallback to SMTP
+        # 2. Fallback to SMTP (Sending materials to user with instructions)
         return EmailService._send_via_smtp(user, job, cover_letter_file, cv_file_path)
 
     @staticmethod
@@ -56,8 +54,8 @@ class EmailService:
         message['from'] = user.email
         message['subject'] = f"Application for {job.title} - {user.profile.full_name or user.email}"
 
-        msg_body = f"Hello,\n\nPlease find my application for the {job.title} position attached.\n\nBest regards,\n{user.profile.full_name or user.email}"
-        message.attach(MIMEText(msg_body, 'plain'))
+        email_body = f"Hello,\n\nA new job matching your preferences has been posted on JobMatch:\n\nBest regards,\n{user.profile.full_name or user.email}"
+        message.attach(MIMEText(email_body, 'plain'))
 
         # Attach Cover Letter
         if cover_letter_file:
@@ -94,16 +92,70 @@ class EmailService:
 
     @staticmethod
     def _send_via_smtp(user, job, cover_letter_file, cv_file_path):
-        print("DEBUG Email: Falling back to SMTP (Console Backend)")
-        subject = f"Application for {job.title} - {user.profile.full_name or user.email}"
-        body = f"Hello,\n\nPlease find my application for the {job.title} position attached.\n\nBest regards,\n{user.profile.full_name or user.email}"
+        print(f"DEBUG Email: Sending application materials to user inbox for method: {job.application_method}")
+        
+        # Get company name from either company field or company_profile
+        company_name = job.company
+        if job.company_profile:
+            company_name = job.company_profile.name
+            
+        # Determine instructions based on application method
+        method = job.application_method
+        target = job.application_url or job.employer_email or "the specified application page"
+        
+        if method == 'email':
+            action_title = "FORWARD This Email to the Employer"
+            next_steps = f"""1. Forward this email (with all attachments) to the employer's email address: {job.employer_email}
+2. You can add a personal message if you'd like before forwarding.
+3. Make sure both attachments (Cover Letter and CV) are included."""
+            target_label = "EMPLOYER EMAIL"
+        elif method == 'google_form':
+            action_title = "UPLOAD These Documents to the Google Form"
+            next_steps = f"""1. Click the Google Form link below:
+   {job.application_url}
+2. Fill in your details on the form.
+3. When prompted, upload the documents attached to this email (Cover Letter and CV)."""
+            target_label = "GOOGLE FORM LINK"
+        elif method == 'website':
+            action_title = "UPLOAD These Documents to the Company Website"
+            next_steps = f"""1. Visit the application page:
+   {job.application_url or job.url}
+2. Complete the online application.
+3. Upload the documents attached to this email (Cover Letter and CV) during the submission process."""
+            target_label = "APPLICATION URL"
+        else:
+            action_title = "Complete Your Application"
+            next_steps = f"""1. Use the attached documents (Cover Letter and CV) to complete your application.
+2. Follow the instructions provided on the application page:
+   {job.application_url or job.url}"""
+            target_label = "APPLICATION PAGE"
+
+        subject = f"[ACTION REQUIRED] Your Application Materials for {job.title}"
+        body = f"""Hello {user.profile.full_name or user.email},
+
+Your AI-powered application for "{job.title}" at {company_name or 'the company'} has been prepared!
+
+### NEXT STEPS: {action_title} ###
+
+{next_steps}
+
+{target_label}: {target}
+
+--------------------------------------------------
+APPLICATION SUMMARY:
+- Position: {job.title}
+- Company: {company_name or 'Not specified'}
+- Attachments: Cover Letter and CV are ready for use.
+--------------------------------------------------
+
+Best regards,
+FindAJob.ai Application System"""
         
         email = EmailMessage(
             subject,
             body,
             settings.DEFAULT_FROM_EMAIL,
-            [job.employer_email],
-            reply_to=[user.email]
+            [user.email],
         )
 
         if cover_letter_file:
@@ -118,6 +170,7 @@ class EmailService:
 
         try:
             email.send()
-            return True, "Email sent via SMTP"
+            display_target = job.employer_email if method == 'email' else "the application link"
+            return True, f"Application materials sent to your email. Please follow the instructions to complete your submission to {display_target}."
         except Exception as e:
             return False, f"SMTP Error: {str(e)}"

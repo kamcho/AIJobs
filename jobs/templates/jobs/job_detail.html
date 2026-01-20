@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ job.title }} - FindAJob.ai{% endblock %}
+{% block title %}{{ job.title }} - JobMatch{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -174,6 +174,36 @@
         font-weight: 600;
         margin-top: 8px;
     }
+
+    .btn-wishlist {
+        width: 100%;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-wishlist:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .btn-wishlist.active {
+        color: #3b82f6;
+        border-color: rgba(59, 130, 246, 0.4);
+        background: rgba(59, 130, 246, 0.05);
+    }
 </style>
 {% endblock %}
 
@@ -219,6 +249,20 @@
                 style="background: rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem;">
                 {{ job.category.name }}
             </span>
+            {% if user_application and user_application.cover_letter %}
+            <div style="margin-top: 16px;">
+                <a href="{{ user_application.cover_letter.url }}" class="btn-wishlist" target="_blank"
+                    style="margin-top: 0; width: auto; padding: 8px 16px; font-size: 0.8rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Cover Letter
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -236,6 +280,16 @@
                 </li>
                 {% endfor %}
             </ul>
+
+            {% if user_application and user_application.cover_letter_text %}
+            <div id="sent-cover-letter"
+                style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+                <h2 class="section-title">Your Sent Cover Letter</h2>
+                <div
+                    style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 24px; border: 1px solid var(--border-color); color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; white-space: pre-wrap;">
+                    {{ user_application.cover_letter_text }}</div>
+            </div>
+            {% endif %}
         </div>
 
         <aside class="sidebar-info">
@@ -260,29 +314,111 @@
 
             <hr style="border: none; border-top: 1px solid var(--border-color); margin: 24px 0;">
 
+            {% if user.role == 'Employer' %}
+            <div
+                style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 16px; text-align: center;">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+                    <strong style="color: var(--primary);">Employer View</strong><br>
+                    You are viewing this listing as an employer. Application features are disabled.
+                </p>
+            </div>
+            {% else %}
             {% if user_application %}
             <div
                 style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 16px; text-align: center;">
-                <span style="color: var(--success); font-weight: 700;">✓ Applied</span>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Status:
-                    {{ user_application.status }}</p>
-                <p style="font-size: 0.75rem; color: var(--text-muted);">Sent on {{
-                    user_application.applied_at|date:"Md, Y" }}</p>
+                <span style="color: var(--success); font-weight: 700;">✓ Cover Letter Generated</span>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">Generated on
+                    {{user_application.applied_at|date:"M d, Y" }}</p>
+
+                {% if user_application.cover_letter %}
+                <a href="{{ user_application.cover_letter.url }}" target="_blank"
+                    style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: var(--primary); text-decoration: none; padding: 10px; background: rgba(16, 185, 129, 0.05); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2); transition: all 0.2s;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Cover Letter
+                </a>
+                {% endif %}
+
+                {% if user_application.cover_letter_text %}
+                <a href="#sent-cover-letter"
+                    style="display: block; margin-top: 8px; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; border-bottom: 1px dashed currentColor; width: fit-content; margin-left: auto; margin-right: auto;">
+                    View Text
+                </a>
+                {% endif %}
             </div>
             {% else %}
-            {% if job.employer_email %}
-            <a href="{% url 'apply_via_email' job.pk %}" class="btn-apply">Apply Now</a>
+            {% if job.application_method == 'email' %}
+            <a href="{% url 'apply_via_email' job.pk %}" class="btn-apply">
+                📧 {{ job.get_application_method_display_text }}
+            </a>
+            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
+                Send application via email
+            </p>
+
+            {% elif job.application_method == 'google_form' %}
+            <a href="{{ job.application_url|default:job.url }}" target="_blank" class="btn-apply">
+                📝 {{ job.get_application_method_display_text }}
+            </a>
+            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
+                (Opens Google Form)
+            </p>
+
+            {% elif job.application_method == 'website' %}
+            <a href="{{ job.application_url|default:job.url }}" target="_blank" class="btn-apply">
+                🌐 {{ job.get_application_method_display_text }}
+            </a>
+            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
+                (Opens external website)
+            </p>
+
             {% else %}
-            <a href="{{ job.url }}" target="_blank" class="btn-apply">Apply Now</a>
-            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">(Opens
-                external site)</p>
+            <a href="{{ job.application_url|default:job.url }}" target="_blank" class="btn-apply">
+                {{ job.get_application_method_display_text }}
+            </a>
+            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
+                (Opens application page)
+            </p>
             {% endif %}
+            {% endif %}
+            {% endif %}
+
+            {# Show special instructions if provided #}
+            {% if job.application_instructions %}
+            <div
+                style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 12px; margin-top: 16px;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0; white-space: pre-wrap;">
+                    <strong style="color: var(--primary);">📌 Instructions:</strong><br>
+                    {{ job.application_instructions }}
+                </p>
+            </div>
             {% endif %}
 
             {% if job.expiry_date %}
             <div class="expire-badge">
                 Expires on {{ job.expiry_date|date:"M d, Y" }}
             </div>
+            {% endif %}
+
+            {% if user.is_authenticated and user.role != 'Employer' %}
+            <a href="{% url 'toggle_wishlist' job.pk %}" class="btn-wishlist {% if is_wishlisted %}active{% endif %}">
+                {% if is_wishlisted %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Saved to Wishlist
+                {% else %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Save for Later
+                {% endif %}
+            </a>
             {% endif %}
         </aside>
     </div>

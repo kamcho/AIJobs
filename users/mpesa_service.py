@@ -57,7 +57,7 @@ class MpesaService:
             "PhoneNumber": phone_number,
             "CallBackURL": settings.MPESA_CALLBACK_URL,
             "AccountReference": f"FindAJob-{subscription_tier}",
-            "TransactionDesc": f"Payment for {subscription_tier} subscription"
+            'TransactionDesc': 'JobMatch Subscription'
         }
         
         try:

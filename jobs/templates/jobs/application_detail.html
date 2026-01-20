@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .application-detail-container {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 40px auto;
         padding: 0 20px;
     }
@@ -55,9 +55,15 @@
         font-size: 0.9rem;
     }
 
-    .status-applied {
+    .status-under-review,
+    .status-under\ review {
         background: rgba(59, 130, 246, 0.1);
         color: var(--primary-light);
+    }
+
+    .status-shortlisted {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
     }
 
     .status-interviewing {
@@ -73,6 +79,18 @@
     .status-offer {
         background: rgba(16, 185, 129, 0.1);
         color: var(--success);
+    }
+
+    .score-high {
+        color: var(--success);
+    }
+
+    .score-medium {
+        color: #f59e0b;
+    }
+
+    .score-low {
+        color: #ef4444;
     }
 
     .content-grid {
@@ -159,22 +177,80 @@
 
 {% block content %}
 <main class="application-detail-container">
+    {% if user.role == 'Employer' %}
+    <a href="{% url 'dashboard' %}" class="back-link">
+        <span>←</span> Back to Dashboard
+    </a>
+    {% else %}
     <a href="{% url 'application_list' %}" class="back-link">
         <span>←</span> Back to My Applications
     </a>
+    {% endif %}
 
     <div class="header-card">
         <div class="job-main">
             <h1>{{ application.job.title }}</h1>
             <span class="company-info">{{ application.job.company }}</span>
         </div>
+        {% if user.role == 'Employer' or user.role == 'Admin' %}
+        <div class="status-management">
+            <form action="{% url 'update_application_status' application.pk %}" method="POST"
+                style="display: flex; align-items: center; gap: 12px;">
+                {% csrf_token %}
+                <span
+                    style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Status:</span>
+                <select name="status" onchange="this.form.submit()"
+                    class="status-badge status-{{ application.status|slugify }}"
+                    style="border: none; cursor: pointer; font-family: inherit; -webkit-appearance: none; outline: none;">
+                    <option value="Under Review" {% if application.status == "Under Review" %}selected{% endif %}>Under
+                        Review</option>
+                    <option value="Shortlisted" {% if application.status == "Shortlisted" %}selected{% endif %}>
+                        Shortlisted</option>
+                    <option value="Interviewing" {% if application.status == "Interviewing" %}selected{% endif %}>
+                        Interviewing</option>
+                    <option value="Offer" {% if application.status == "Offer" %}selected{% endif %}>Offer</option>
+                    <option value="Rejected" {% if application.status == "Rejected" %}selected{% endif %}>Rejected
+                    </option>
+                </select>
+            </form>
+        </div>
+        {% else %}
         <div class="status-badge status-{{ application.status|lower }}">
             {{ application.status }}
         </div>
+        {% endif %}
     </div>
 
     <div class="content-grid">
         <div class="main-content">
+            {% if user.role == 'Employer' or user.role == 'Admin' %}
+            <div class="detail-card">
+                <h2 class="section-title">
+                    <span>👤</span> Candidate Information
+                </h2>
+                <div style="display: flex; gap: 20px; align-items: start;">
+                    <div
+                        style="width: 60px; height: 60px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: var(--primary-light);">
+                        {{ application.user.profile.full_name|default:application.user.email|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.25rem;">{{
+                            application.user.profile.full_name|default:"Unnamed Candidate" }}</h3>
+                        <p style="margin: 4px 0; color: var(--text-muted);">{{ application.user.email }}</p>
+                        {% if application.user.profile.phone_primary %}
+                        <p style="margin: 4px 0; color: var(--text-muted);">📞 {{ application.user.profile.phone_primary
+                            }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 16px;">
+                    <a href="mailto:{{ application.user.email }}" class="btn-download"
+                        style="background: var(--primary); color: white;">Send Email</a>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="detail-card">
                 <h2 class="section-title">
                     <span>📄</span> Submitted Documents
@@ -186,11 +262,68 @@
                         <span class="doc-icon">💼</span>
                         <div>
                             <span style="display: block; font-weight: 600;">CV / Resume</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">{{application.cv_used.document_type.name }}</span>
+                            <span
+                                style="font-size: 0.8rem; color: var(--text-muted);">{{application.cv_used.document_type.name
+                                }}</span>
                         </div>
                     </div>
-                    <a href="{{ application.cv_used.file.url }}" class="btn-download" target="_blank">View File</a>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        {% if application.cv_used.ai_score and user.role != 'Seeker' %}
+                        <div style="text-align: right;">
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">AI
+                                Match</span>
+                            <span
+                                class="{% if application.cv_used.ai_score >= 80 %}score-high{% elif application.cv_used.ai_score >= 60 %}score-medium{% else %}score-low{% endif %}"
+                                style="font-size: 1.1rem; font-weight: 800;">{{application.cv_used.ai_score }}%</span>
+
+                        </div>
+                        {% endif %}
+                        <a href="{{ application.cv_used.file.url }}" class="btn-download" target="_blank">View File</a>
+                    </div>
                 </div>
+
+                {% if user.role != 'Seeker' and application.cv_used.analysis %}
+                <div
+                    style="margin-top: 24px; padding: 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 16px;">
+                    <h3
+                        style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <span>✨</span> AI Analysis Breakdown
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Experience
+                                Match</span>
+                            <div
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: {{ application.cv_used.analysis.experience_score|add:application.cv_used.analysis.experience_score|add:application.cv_used.analysis.experience_score|add:application.cv_used.analysis.experience_score|add:application.cv_used.analysis.experience_score }}%; height: 100%; background: var(--primary);">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Relevance
+                                Score</span>
+                            <div
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: {{ application.cv_used.analysis.relevance_score|add:application.cv_used.analysis.relevance_score|add:application.cv_used.analysis.relevance_score|add:application.cv_used.analysis.relevance_score|add:application.cv_used.analysis.relevance_score }}%; height: 100%; background: #10b981;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if application.cv_used.analysis.improvement_suggestions %}
+                    <div
+                        style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; padding-top: 12px; border-top: 1px dashed var(--border-color);">
+                        <strong>AI Summary:</strong>
+                        {{ application.cv_used.analysis.improvement_suggestions|truncatechars:15000 }}
+                    </div><br>
+                    {% endif %}
+                </div>
+                <br>
+                {% endif %}
                 {% endif %}
 
                 {% if application.cover_letter %}
@@ -199,28 +332,35 @@
                         <span class="doc-icon">✍️</span>
                         <div>
                             <span style="display: block; font-weight: 600;">Cover Letter</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">Submitted Content</span>
+                            <span
+                                style="font-size: 0.8rem; color: var(--text-muted);">{{application.file_format|default:"PDF"|upper }} Document</span>
+
                         </div>
                     </div>
-                    <a href="{{ application.cover_letter.url }}" class="btn-download" target="_blank">Download</a>
+                    <div style="display: flex; gap: 8px;">
+                        {% if application.cover_letter_text %}
+                        <a href="#cover-letter-text" class="btn-download">Read Text</a>
+                        {% endif %}
+                        <a href="{{ application.cover_letter.url }}" class="btn-download" target="_blank">Download</a>
+                    </div>
                 </div>
                 {% endif %}
             </div>
 
-            <div class="detail-card" style="margin-bottom: 0;">
-                <h2 class="section-title">
-                    <span>🏢</span> About the Company
-                </h2>
-                <div style="font-size: 1rem; line-height: 1.6; color: var(--text-muted);">
-                    <p><strong>Location:</strong> {{ application.job.location }}</p>
-                    <p style="margin-top: 12px;"><a href="{% url 'job_detail' application.job.pk %}"
-                            style="color: var(--primary-light); text-decoration: none; font-weight: 600;">View original
-                            job listing ›</a></p>
-                </div>
-            </div>
         </div>
 
         <aside class="sidebar-content">
+            <div class="detail-card">
+                <h2 class="section-title">
+                    <span>🏢</span> About the Company
+                </h2>
+                <div style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+                    <p><strong>Location:</strong> {{ application.job.location }}</p>
+                    <p style="margin-top: 12px;"><a href="{% url 'job_detail' application.job.pk %}"
+                            style="color: var(--primary-light); text-decoration: none; font-weight: 600;">View job
+                            listing ›</a></p>
+                </div>
+            </div>
             <div class="detail-card">
                 <h2 class="section-title" style="font-size: 1.1rem;">Timeline</h2>
 
@@ -243,5 +383,16 @@
             </div>
         </aside>
     </div>
+
+    {% if application.cover_letter_text %}
+    <div class="detail-card" id="cover-letter-text" style="margin-top: 24px;">
+        <h2 class="section-title">
+            <span>📝</span> Cover Letter Text
+        </h2>
+        <div
+            style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 32px; border: 1px solid var(--border-color); color: var(--text-muted); line-height: 1.8; font-size: 1rem; white-space: pre-wrap;">
+            {{ application.cover_letter_text }}</div>
+    </div>
+    {% endif %}
 </main>
 {% endblock %}

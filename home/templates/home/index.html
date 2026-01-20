@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}FindAJob - AI Powered Job Automation{% endblock %}
+{% block title %}JobMatch - AI Powered Job Automation{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -8,6 +8,91 @@
     .hero {
         padding-top: 60px;
         /* Adjusted to balance the sticky header */
+    }
+
+    /* Jobs Grid Branding */
+    .jobs-section {
+        padding: 80px 0;
+        background: var(--bg-main);
+    }
+
+    .jobs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+        margin-top: 48px;
+    }
+
+    .home-job-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        text-decoration: none;
+    }
+
+    .home-job-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .job-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .job-logo-mini {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .job-card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .job-card-company {
+        font-size: 0.9rem;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .job-card-meta {
+        display: flex;
+        gap: 16px;
+        margin-top: 20px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .job-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .view-all-container {
+        text-align: center;
+        margin-top: 48px;
     }
 </style>
 {% endblock %}
@@ -29,9 +114,7 @@
                     relevant engineering jobs for you—while you sleep.
                 </p>
                 <div class="hero-cta-group">
-                                    <a href="https://jobmatch.arrotechsolutions.com/privacy-policy/">Privacy Policy</a>
 
-                    <a href="{% url 'privacy_policy' %}" style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
                     {% if user.is_authenticated %}
                     <a href="{% url 'dashboard' %}" class="btn btn-primary">
                         Go to Dashboard
@@ -55,9 +138,9 @@
                     {% endif %}
                     <div class="trust-indicator">
                         <div class="avatars">
-                            <div class="avatar" style="background-color: #FF5733;">AD</div>
-                            <div class="avatar" style="background-color: #33FF57;">MK</div>
-                            <div class="avatar" style="background-color: #3357FF;">JL</div>
+                            <div class="avatar" style="background-color: #FF5733;">WK</div>
+                            <div class="avatar" style="background-color: #33FF57;">BM</div>
+                            <div class="avatar" style="background-color: #3357FF;">FN</div>
                         </div>
                         <span class="trust-text">Trusted by 1,200+ job seekers</span>
                     </div>
@@ -77,14 +160,14 @@
                             <div class="activity-icon success">✓</div>
                             <div class="activity-details">
                                 <span class="activity-title">Applied to Senior Backend Eng.</span>
-                                <span class="activity-meta">Google • 2m ago</span>
+                                <span class="activity-meta">Safaricom • 2m ago</span>
                             </div>
                         </div>
                         <div class="activity-row">
                             <div class="activity-icon success">✓</div>
                             <div class="activity-details">
                                 <span class="activity-title">Applied to Full Stack Dev</span>
-                                <span class="activity-meta">Netflix • 5m ago</span>
+                                <span class="activity-meta">Equity Bank • 5m ago</span>
                             </div>
                         </div>
                         <div class="activity-row">
@@ -93,7 +176,7 @@
                             </div>
                             <div class="activity-details">
                                 <span class="activity-title">Analyzing Job Description...</span>
-                                <span class="activity-meta">Amazon • Now</span>
+                                <span class="activity-meta">KCB Group • Now</span>
                             </div>
                         </div>
                     </div>
@@ -103,6 +186,58 @@
                     </div>
                 </div>
                 <div class="glow-effect"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="jobs-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Latest <span class="gradient-text">Opportunities.</span></h2>
+                <p class="section-subtitle">Discover recent roles matched with our AI-powered application engine.</p>
+            </div>
+
+            <div class="jobs-grid">
+                {% for job in latest_jobs %}
+                <a href="{% url 'job_detail' job.pk %}" class="home-job-card">
+                    <div>
+                        <div class="job-card-header">
+                            <div class="job-logo-mini">
+                                {{ job.company|slice:":1" }}
+                            </div>
+                            <span class="job-tag"
+                                style="background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                {{ job.get_terms_display }}
+                            </span>
+                        </div>
+                        <span class="job-card-title">{{ job.title }}</span>
+                        <span class="job-card-company">{{ job.company }}</span>
+                    </div>
+
+                    <div class="job-card-meta">
+                        <div class="job-meta-item">
+                            <span>📍 {{ job.location }}</span>
+                        </div>
+                        <div class="job-meta-item">
+                            <span>🕒 {{ job.posted_at|timesince }} ago</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <p style="text-align: center; color: var(--text-muted); grid-column: 1 / -1;">No jobs available at the
+                    moment.</p>
+                {% endfor %}
+            </div>
+
+            <div class="view-all-container">
+                <a href="{% url 'job_list' %}" class="btn btn-secondary">
+                    View All Jobs
+                    <svg style="margin-left: 8px;" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14"></path>
+                        <path d="M12 5l7 7-7 7"></path>
+                    </svg>
+                </a>
             </div>
         </div>
     </section>
@@ -232,10 +367,10 @@
                         requests in my first week. It's like having a personal recruitment assistant that never sleeps.
                     </p>
                     <div class="author-info">
-                        <div class="author-avatar" style="background: #3b82f6;">SR</div>
+                        <div class="author-avatar" style="background: #3b82f6;">WK</div>
                         <div class="author-details">
-                            <h4>Sarah Rodriguez</h4>
-                            <p>Senior Backend Engineer @ Stripe</p>
+                            <h4>Wanjiku Kamau</h4>
+                            <p>Senior Software Engineer @ Safaricom</p>
                         </div>
                     </div>
                 </div>
@@ -244,13 +379,13 @@
                 <div class="testimonial-card">
                     <div class="stars">★★★★★</div>
                     <div class="quote-icon">"</div>
-                    <p class="testimonial-content">As a Full Stack dev, I was overwhelmed by applications. FindAJob.ai
+                    <p class="testimonial-content">As a Full Stack dev, I was overwhelmed by applications. JobMatch
                         scanned perfectly and only applied to roles where I was a 90%+ match. Total game changer.</p>
                     <div class="author-info">
-                        <div class="author-avatar" style="background: #10b981;">MK</div>
+                        <div class="author-avatar" style="background: #10b981;">BM</div>
                         <div class="author-details">
-                            <h4>Marcus Knight</h4>
-                            <p>Full Stack Developer @ Vercel</p>
+                            <h4>Brian Mutua</h4>
+                            <p>Full Stack Developer @ Cellulant</p>
                         </div>
                     </div>
                 </div>
@@ -262,10 +397,10 @@
                     <p class="testimonial-content">The CV analysis report gave me exactly what I needed to fix. Once
                         updated, the agent landed me a role at my dream company within 14 days.</p>
                     <div class="author-info">
-                        <div class="author-avatar" style="background: #6366f1;">AL</div>
+                        <div class="author-avatar" style="background: #6366f1;">FN</div>
                         <div class="author-details">
-                            <h4>Aisha Lawson</h4>
-                            <p>DevOps Lead @ Atlassian</p>
+                            <h4>Faith Njeri</h4>
+                            <p>DevOps Engineer @ KCB Group</p>
                         </div>
                     </div>
                 </div>
@@ -280,81 +415,109 @@
                 <h2 class="section-title">Get In <span class="gradient-text">Touch</span></h2>
                 <p class="section-subtitle">Have questions? Our team is here to help you with anything you need.</p>
             </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; max-width: 1000px; margin: 0 auto;">
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; max-width: 1000px; margin: 0 auto;">
                 <!-- Contact Form -->
-                <div class="contact-form" style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 32px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div class="contact-form"
+                    style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 32px; border: 1px solid rgba(255, 255, 255, 0.05);">
                     <form id="contactForm" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div id="formMessage"
+                            style="display: none; padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 8px;">
+                        </div>
                         <div>
-                            <label for="name" style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Your Name</label>
-                            <input type="text" id="name" name="name" required 
-                                   style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
+                            <label for="name"
+                                style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Your
+                                Name</label>
+                            <input type="text" id="name" name="name" required style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
                                           border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
                                           color: #f8fafc; font-size: 1rem;">
                         </div>
-                        
+
                         <div>
-                            <label for="email" style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Email Address</label>
-                            <input type="email" id="email" name="email" required 
-                                   style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
+                            <label for="email"
+                                style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Email
+                                Address</label>
+                            <input type="email" id="email" name="email" required style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
                                           border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
                                           color: #f8fafc; font-size: 1rem;">
                         </div>
-                        
+
                         <div>
-                            <label for="message" style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Your Message</label>
-                            <textarea id="message" name="message" rows="4" required 
-                                     style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
+                            <label for="phone"
+                                style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Phone
+                                Number</label>
+                            <input type="tel" id="phone" name="phone" required style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
+                                          border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
+                                          color: #f8fafc; font-size: 1rem;" placeholder="e.g. +254 700 000 000">
+                        </div>
+
+                        <div>
+                            <label for="message"
+                                style="display: block; margin-bottom: 8px; color: #f8fafc; font-weight: 500;">Your
+                                Message</label>
+                            <textarea id="message" name="message" rows="4" required style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
                                             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
                                             color: #f8fafc; font-size: 1rem; resize: vertical;"></textarea>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary" 
-                                style="align-self: flex-start; margin-top: 12px; padding: 12px 32px; font-weight: 600; cursor: pointer;
+
+                        <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 12px; padding: 12px 32px; font-weight: 600; cursor: pointer;
                                        background: #3b82f6; color: white; border: none; border-radius: 8px;
                                        display: inline-flex; align-items: center;">
                             Send Message
-                            <svg style="margin-left: 8px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg style="margin-left: 8px;" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
                         </button>
                     </form>
                 </div>
-                
+
                 <!-- Contact Info -->
                 <div class="contact-info" style="display: flex; flex-direction: column; gap: 24px;">
-                    <div style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 32px; border: 1px solid rgba(255, 255, 255, 0.05); height: 100%;">
-                        <h3 style="margin-top: 0; margin-bottom: 24px; font-size: 1.25rem; color: #f8fafc;">Contact Information</h3>
-                        
+                    <div
+                        style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 32px; border: 1px solid rgba(255, 255, 255, 0.05); height: 100%;">
+                        <h3 style="margin-top: 0; margin-bottom: 24px; font-size: 1.25rem; color: #f8fafc;">Contact
+                            Information</h3>
+
                         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
-                            <div style="background: rgba(59, 130, 246, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <div
+                                style="background: rgba(59, 130, 246, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21.5 18l-9-6.5L3.5 18V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13z"></path>
                                 </svg>
                             </div>
                             <div>
                                 <h4 style="margin: 0 0 4px 0; color: #f8fafc; font-size: 1rem;">Email Us</h4>
-                                <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">support@findajob.ai</p>
+                                <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">support@jobmatch.ai</p>
                             </div>
                         </div>
-                        
+
                         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
-                            <div style="background: rgba(16, 185, 129, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            <div
+                                style="background: rgba(16, 185, 129, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                    </path>
                                 </svg>
                             </div>
                             <div>
                                 <h4 style="margin: 0 0 4px 0; color: #f8fafc; font-size: 1rem;">Call Us</h4>
                                 <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">+1 (555) 123-4567</p>
-                                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.8rem;">Mon-Fri, 9am-5pm EST</p>
+                                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.8rem;">Mon-Fri, 9am-5pm EST
+                                </p>
                             </div>
                         </div>
-                        
+
                         <div style="display: flex; align-items: flex-start; gap: 16px;">
-                            <div style="background: rgba(99, 102, 241, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <div
+                                style="background: rgba(99, 102, 241, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
@@ -362,26 +525,39 @@
                             <div>
                                 <h4 style="margin: 0 0 4px 0; color: #f8fafc; font-size: 1rem;">Visit Us</h4>
                                 <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">123 Tech Street</p>
-                                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.9rem;">San Francisco, CA 94107</p>
+                                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.9rem;">San Francisco, CA 94107
+                                </p>
                             </div>
                         </div>
-                        
-                        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+
+                        <div
+                            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
                             <h4 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 1rem;">Follow Us</h4>
                             <div style="display: flex; gap: 16px;">
-                                <a href="#" style="color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                <a href="#" style="color: #94a3b8; transition: color 0.2s;"
+                                    onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z">
+                                        </path>
                                     </svg>
                                 </a>
-                                <a href="#" style="color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#94a3b8'">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                                <a href="#" style="color: #94a3b8; transition: color 0.2s;"
+                                    onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#94a3b8'">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path
+                                            d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z">
+                                        </path>
                                     </svg>
                                 </a>
-                                <a href="#" style="color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#0077b5'" onmouseout="this.style.color='#94a3b8'">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                                <a href="#" style="color: #94a3b8; transition: color 0.2s;"
+                                    onmouseover="this.style.color='#0077b5'" onmouseout="this.style.color='#94a3b8'">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path
+                                            d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z">
+                                        </path>
                                         <rect x="2" y="9" width="4" height="12"></rect>
                                         <circle cx="4" cy="4" r="2"></circle>
                                     </svg>
@@ -395,54 +571,112 @@
     </section>
 
     <script>
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
             e.preventDefault();
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const formMessage = document.getElementById('formMessage');
+            const originalBtnText = submitBtn.innerHTML;
+
             // Get form data
-            const formData = new FormData(e.target);
+            const formData = new FormData(form);
             const formValues = Object.fromEntries(formData.entries());
-            
-            // Here you would typically send the form data to your backend
-            console.log('Form submitted:', formValues);
-            
-            // Show success message
-            alert('Thank you for your message! We will get back to you soon.');
-            e.target.reset();
+
+            // Reset message
+            formMessage.style.display = 'none';
+            formMessage.innerHTML = '';
+
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Sending...';
+
+            fetch('{% url "contact" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(formValues)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        formMessage.style.display = 'block';
+                        formMessage.style.background = 'rgba(16, 185, 129, 0.1)';
+                        formMessage.style.color = '#10b981';
+                        formMessage.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+                        formMessage.innerHTML = 'Thank you! Your message has been sent successfully.';
+                        form.reset();
+                    } else {
+                        formMessage.style.display = 'block';
+                        formMessage.style.background = 'rgba(239, 68, 68, 0.1)';
+                        formMessage.style.color = '#ef4444';
+                        formMessage.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+                        formMessage.innerHTML = 'Error: ' + (data.error || 'Something went wrong. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    formMessage.style.display = 'block';
+                    formMessage.style.background = 'rgba(239, 68, 68, 0.1)';
+                    formMessage.style.color = '#ef4444';
+                    formMessage.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+                    formMessage.innerHTML = 'An unexpected error occurred. Please try again later.';
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                });
         });
     </script>
 
 
 
     <!-- Footer Section -->
-    <footer class="site-footer" style="background-color: #0f172a; padding: 64px 0 32px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+    <footer class="site-footer"
+        style="background-color: #0f172a; padding: 64px 0 32px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
         <div class="container">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 48px; margin-bottom: 48px;">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 48px; margin-bottom: 48px;">
                 <!-- Company Info -->
                 <div class="footer-about" style="max-width: 300px;">
                     <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                        <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <div
+                            style="width: 32px; height: 32px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                             </svg>
                         </div>
-                        <span style="font-size: 1.25rem; font-weight: 700; color: #f8fafc;">FindAJob.ai</span>
+                        <span style="font-size: 1.25rem; font-weight: 700; color: #f8fafc;">JobMatch</span>
                     </div>
                     <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 24px;">
                         Automating your job search with AI to help you land your dream job faster and more efficiently.
                     </p>
                     <div style="display: flex; gap: 16px;">
-                        <a href="#" style="color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <a href="#" style="color: #94a3b8; transition: color 0.2s;"
+                            onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                             </svg>
                         </a>
-                        <a href="#" style="color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#94a3b8'">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                        <a href="#" style="color: #94a3b8; transition: color 0.2s;"
+                            onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#94a3b8'">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z">
+                                </path>
                             </svg>
                         </a>
-                        <a href="#" style="color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#0077b5'" onmouseout="this.style.color='#94a3b8'">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                        <a href="#" style="color: #94a3b8; transition: color 0.2s;"
+                            onmouseover="this.style.color='#0077b5'" onmouseout="this.style.color='#94a3b8'">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z">
+                                </path>
                                 <rect x="2" y="9" width="4" height="12"></rect>
                                 <circle cx="4" cy="4" r="2"></circle>
                             </svg>
@@ -453,23 +687,43 @@
                 <!-- Quick Links -->
                 <div class="footer-links">
                     <h4 style="color: #f8fafc; font-size: 1rem; margin-bottom: 20px; font-weight: 600;">Quick Links</h4>
-                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Home</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">How It Works</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Features</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Pricing</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">About Us</a></li>
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'"
+                                onmouseout="this.style.color='#94a3b8'">Home</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">How It
+                                Works</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'"
+                                onmouseout="this.style.color='#94a3b8'">Features</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'"
+                                onmouseout="this.style.color='#94a3b8'">Pricing</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">About
+                                Us</a></li>
                     </ul>
                 </div>
 
                 <!-- Resources -->
                 <div class="footer-resources">
                     <h4 style="color: #f8fafc; font-size: 1rem; margin-bottom: 20px; font-weight: 600;">Resources</h4>
-                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Blog</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Help Center</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Careers</a></li>
-                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Contact Us</a></li>
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'"
+                                onmouseout="this.style.color='#94a3b8'">Blog</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Help
+                                Center</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'"
+                                onmouseout="this.style.color='#94a3b8'">Careers</a></li>
+                        <li><a href="#" style="color: #94a3b8; text-decoration: none; transition: color 0.2s;"
+                                onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Contact
+                                Us</a></li>
                     </ul>
                 </div>
 
@@ -480,17 +734,16 @@
                         Subscribe to our newsletter for the latest updates and job search tips.
                     </p>
                     <form style="display: flex; gap: 8px;">
-                        <input type="email" placeholder="Your email" required 
-                               style="flex: 1; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
+                        <input type="email" placeholder="Your email" required style="flex: 1; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); 
                                       border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
                                       color: #f8fafc; font-size: 0.9rem; outline: none;">
-                        <button type="submit" 
-                                style="background: #3b82f6; color: white; border: none; border-radius: 8px; 
+                        <button type="submit" style="background: #3b82f6; color: white; border: none; border-radius: 8px; 
                                        padding: 0 20px; font-weight: 600; cursor: pointer; display: flex; 
                                        align-items: center; justify-content: center; transition: background 0.2s;"
-                                onmouseover="this.style.background='#2563eb'" 
-                                onmouseout="this.style.background='#3b82f6'">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                            onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                style="margin-right: 6px;">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
@@ -501,14 +754,24 @@
             </div>
 
             <!-- Copyright and Legal -->
-            <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
+            <div
+                style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
                 <p style="color: #64748b; font-size: 0.875rem; margin: 0;">
-                    &copy; 2025 FindAJob.ai. All rights reserved.
+                    &copy; 2025 JobMatch. All rights reserved.
                 </p>
                 <div style="display: flex; gap: 24px;">
-                    <a href="{% url 'privacy_policy' %}" style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
-                    <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Terms of Service</a>
-                    <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Cookie Policy</a>
+                    <a href="{% url 'privacy_policy' %}"
+                        style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;"
+                        onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy
+                        Policy</a>
+                    <a href="#"
+                        style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;"
+                        onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Terms of
+                        Service</a>
+                    <a href="#"
+                        style="color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s;"
+                        onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Cookie
+                        Policy</a>
                 </div>
             </div>
         </div>

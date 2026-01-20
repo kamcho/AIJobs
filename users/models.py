@@ -36,6 +36,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Job Seeker')
+    company = models.ForeignKey('jobs.Company', on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)

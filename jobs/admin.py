@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import JobCategory, JobListing, Application, AutomationLog, JobRequirement
+from .models import JobCategory, JobListing, Application, AutomationLog, JobRequirement, Company
 
+admin.site.register(Company)
 @admin.register(JobCategory)
 class JobCategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)

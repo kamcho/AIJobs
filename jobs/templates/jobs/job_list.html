@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Browse Jobs - FindAJob.ai{% endblock %}
+{% block title %}Browse Jobs - JobMatch{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -52,6 +52,27 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+
+    .category-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .category-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+    }
+
+    .category-list::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 10px;
+    }
+
+    .category-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.4);
     }
 
     .category-link {
@@ -139,11 +160,90 @@
         pointer-events: none;
     }
 
+    .search-reset {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        color: var(--text-muted);
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        text-decoration: none;
+        z-index: 10;
+    }
+
+    .search-reset:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
     /* Job Cards */
     .job-results {
         display: flex;
         flex-direction: column;
         gap: 24px;
+    }
+
+    .ai-indicator {
+        background: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 16px;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 8px;
+        backdrop-filter: blur(10px);
+        animation: slideInDown 0.5s ease-out;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ai-glow-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--primary-gradient);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        flex-shrink: 0;
+    }
+
+    .ai-text-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ai-title {
+        font-weight: 700;
+        color: white;
+        font-size: 0.95rem;
+    }
+
+    .ai-subtitle {
+        color: var(--text-muted);
+        font-size: 0.85rem;
     }
 
     .job-card {
@@ -219,6 +319,7 @@
         display: inline-block;
         background: linear-gradient(90deg, #fff, #cbd5e1);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
@@ -305,6 +406,32 @@
         align-items: flex-end;
         gap: 16px;
         min-width: 140px;
+    }
+
+    .btn-wishlist-icon {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        border: 1px solid var(--card-border);
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-wishlist-icon:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--primary);
+        border-color: var(--primary-light);
+    }
+
+    .btn-wishlist-icon.active {
+        color: var(--primary);
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.2);
     }
 
     .btn-apply {
@@ -523,7 +650,7 @@
 
     <div class="search-header">
         <h1
-            style="font-family: var(--font-heading); font-size: 3rem; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            style="font-family: var(--font-heading); font-size: 3rem; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
             Find Your Next Chapter
         </h1>
         <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 40px;">
@@ -540,6 +667,15 @@
             </span>
             <input type="text" name="q" class="search-bar" placeholder="Job title, keywords, or company..."
                 value="{{ query }}">
+            {% if query or selected_category %}
+            <a href="{% url 'job_list' %}" class="search-reset" title="Clear search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </a>
+            {% endif %}
             {% if selected_category %}
             <input type="hidden" name="category" value="{{ selected_category }}">
             {% endif %}
@@ -582,6 +718,23 @@
     </aside>
 
     <section class="job-results">
+        {% if query %}
+        <div class="ai-indicator" style="margin-bottom: 24px;">
+            <div class="ai-glow-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2Z"></path>
+                    <path d="M12 12L2.5 4.5"></path>
+                    <path d="M11 18l-2-2 2-2"></path>
+                </svg>
+            </div>
+            <div class="ai-text-info">
+                <span class="ai-title">AI Matching Active</span>
+                <span class="ai-subtitle">FindAJob AI is matching the best opportunities for you based on "{{ query
+                    }}".</span>
+            </div>
+        </div>
+        {% endif %}
         {% for job in jobs %}
         <article class="job-card">
             <div class="company-logo">
@@ -644,6 +797,16 @@
 
             <div class="job-actions">
                 <a href="{% url 'job_detail' job.pk %}" class="btn-apply">View Details</a>
+                {% if user.is_authenticated and user.role != 'Employer' %}
+                <a href="{% url 'toggle_wishlist' job.pk %}"
+                    class="btn-wishlist-icon {% if job.pk in user_wishlisted_ids %}active{% endif %}" title="Save Job">
+                    <svg width="18" height="18" viewBox="0 0 24 24"
+                        fill="{% if job.pk in user_wishlisted_ids %}currentColor{% else %}none{% endif %}"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </a>
+                {% endif %}
             </div>
         </article>
         {% empty %}

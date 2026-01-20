@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - FindAJob.ai{% endblock %}
+{% block title %}Dashboard - JobMatch{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -428,7 +428,8 @@
     </div>
     {% endif %}
     <section class="welcome-section">
-        <h1 class="welcome-title">Welcome back, {% if profile.full_name %}{{ profile.full_name }}{% else %}{{ user.email}}{% endif %}!</h1>
+        <h1 class="welcome-title">Welcome back, {% if profile.full_name %}{{ profile.full_name }}{% else %}{{
+            user.email}}{% endif %}!</h1>
         <p class="welcome-subtitle">Here's what's happening with your account today.</p>
     </section>
 
@@ -462,7 +463,8 @@
                             style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                             <h4 style="font-size: 0.95rem; font-weight: 700;">{{ job.title }}</h4>
                             <span class="badge-small"
-                                style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.1); color: var(--success);">{{ job.category.name }}</span>
+                                style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.1); color: var(--success);">{{
+                                job.category.name }}</span>
                         </div>
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">{{ job.company }}
                             • {{ job.location }}</p>
@@ -493,7 +495,7 @@
                     </div>
                     {% if applications.count %}
                     <span class="badge-small"
-                        style="background: rgba(59, 130, 246, 0.1); color: var(--primary-light);">{{ applications.count }} Total</span>
+                        style="background: rgba(59, 130, 246, 0.1); color: var(--primary-light);">{{ applications.count}} Total</span>
                     {% endif %}
                 </div>
 
@@ -509,7 +511,7 @@
                                 {{ app.status }}
                             </span>
                         </div>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">{{ app.job.company}} • {{ app.applied_at|date:"M d, Y" }}</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">{{app.job.company}} • {{ app.applied_at|date:"M d, Y" }}</p>
                         <a href="{% url 'application_detail' app.pk %}" class="btn btn-secondary"
                             style="padding: 6px 12px; font-size: 0.8rem; width: 100%; text-align: center; border-radius: 8px;">View
                             Application</a>
@@ -617,7 +619,7 @@
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if personal_complete %}✓{% else %}○{% endif%}</span> Personal</span>
+                        <span class="item-label"><span class="check-icon">{% if personal_complete %}✓{% else %}○{%endif%}</span> Personal</span>
                         <a href="{% url 'profile_edit' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
@@ -625,17 +627,17 @@
                         <a href="{% url 'education_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if work_experiences %}✓{% else %}○{% endif%}</span> Experience</span>
+                        <span class="item-label"><span class="check-icon">{% if work_experiences %}✓{% else %}○{%endif%}</span> Experience</span>
                         <a href="{% url 'experience_list' %}" class="update-link" style="font-size: 0.7rem;">Update
                             ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if skills %}✓{% else %}○{% endif%}</span>
+                        <span class="item-label"><span class="check-icon">{% if skills %}✓{% else %}○{%endif%}</span>
                             Skills</span>
                         <a href="{% url 'skill_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                     <div class="completion-item" style="padding: 6px 10px; font-size: 0.75rem;">
-                        <span class="item-label"><span class="check-icon">{% if documents_complete %}✓{% else %}○{% endif  %}</span> Documents</span>
+                        <span class="item-label"><span class="check-icon">{% if documents_complete %}✓{% else %}○{%endif %}</span> Documents</span>
                         <a href="{% url 'document_list' %}" class="update-link" style="font-size: 0.7rem;">Update ›</a>
                     </div>
                 </div>
@@ -651,8 +653,7 @@
                 <div class="score-info">
                     <h3 style="font-size: 1rem; margin-bottom: 4px;">CV AI Rating</h3>
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
-                        {% if cv_score >= 80 %}Excellent match for roles{% elif cv_score >= 60 %}Strong professional
-                        profile{% else %}Optimization recommended{% endif %}
+                        {% if cv_score >= 80 %}Excellent match for roles{% elif cv_score >= 60 %}Strong professionalprofile{% else %}Optimization recommended{% endif %}
                     </p>
                     <a href="{% url 'document_detail' latest_cv.pk %}" class="update-link"
                         style="font-weight: 700;">View Full Analysis ›</a>
@@ -670,7 +671,7 @@
                 {% for doc in all_documents %}
                 <div class="match-item" style="display: flex; align-items: center; gap: 12px; padding: 12px;">
                     <div style="font-size: 1.25rem;">
-                        {% if 'PDF' in doc.document_type.name %}📄{% elif 'CV' in doc.document_type.name %}💼{%  else%}📜{% endif %}
+                        {% if 'PDF' in doc.document_type.name %}📄{% elif 'CV' in doc.document_type.name %}💼{% else%}📜{% endif %}
                     </div>
                     <div class="match-info">
                         <h5 style="font-size: 0.85rem; margin-bottom: 0;">{{ doc.document_type.name }}</h5>

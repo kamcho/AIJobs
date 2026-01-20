@@ -43,15 +43,20 @@ class JobListingForm(forms.ModelForm):
         fields = [
             'title', 'category', 'terms', 'company', 'company_profile', 'description', 
             'location', 'url', 'education_level_required', 
-            'experience_required_years', 'employer_email', 'expiry_date'
+            'experience_required_years', 'application_method', 'employer_email', 
+            'application_url', 'application_instructions', 'expiry_date'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 5}),
+            'application_instructions': forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Optional: Add special instructions for applicants'}),
             'expiry_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['company'].required = False
+        self.fields['company_profile'].required = False
+        self.fields['url'].required = False
         for field in self.fields:
             if field != 'expiry_date' and field != 'description':
                 self.fields[field].widget.attrs.update({'class': 'form-input'})
@@ -61,6 +66,15 @@ class JobListingForm(forms.ModelForm):
         company_profile = self.cleaned_data.get('company_profile')
         if company_profile and not job.company:
             job.company = company_profile.name
+        
+        # Sync with application_url if url is empty
+        app_url = self.cleaned_data.get('application_url')
+        if app_url and not job.url:
+            job.url = app_url
+        elif not job.url:
+            # Fallback to a placeholder if absolutely empty and required by DB
+            job.url = "https://example.com"
+            
         if commit:
             job.save()
         return job

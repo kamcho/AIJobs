@@ -3,7 +3,11 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import MyUser, PersonalProfile, WorkExperience, Education, MySkill, UserDocument
 
 class SignupForm(forms.ModelForm):
-    role = forms.ChoiceField(label="I am a", required=True)
+    role = forms.ChoiceField(
+        label="I am looking for", 
+        required=True,
+        widget=forms.RadioSelect
+    )
     password = forms.CharField(label="Password", widget=forms.PasswordInput, min_length=4)
 
     class Meta:
@@ -13,13 +17,12 @@ class SignupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['role'].choices = [
-            c for c in MyUser.ROLE_CHOICES 
-            if c[0] not in ['Admin', 'None']
+            ('Job Seeker', 'I am looking for Job'),
+            ('Attachment', 'I am looking for Attachment'),
+            ('Employer', 'An Employee for my organisation/business')
         ]
-        self.fields['role'].widget.attrs.update({'class': 'form-input'})
-        self.fields['email'].widget.attrs.update({'class': 'form-input'})
-        # Applying same class as email/role for consistency
-        self.fields['password'].widget.attrs.update({'class': 'form-input'})
+        self.fields['email'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Enter your email'})
+        self.fields['password'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Create a password'})
 
     def save(self, commit=True):
         user = super().save(commit=False)

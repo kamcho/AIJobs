@@ -6,7 +6,7 @@ from django.conf import settings
 
 class AIService:
     @staticmethod
-    def analyze_cv(cv_text):
+    def analyze_cv(cv_text, categories_data=None):
         """
         Analyzes CV text using OpenAI and returns a structured JSON response.
         """
@@ -16,6 +16,14 @@ class AIService:
             
         client = OpenAI(api_key=api_key)
         
+        categories_prompt = ""
+        if categories_data:
+            categories_prompt = f"""
+            Also, identify the most relevant job categories for this candidate from the following list:
+            {json.dumps(categories_data)}
+            Include these in the "suggested_categories" field of your JSON response.
+            """
+
         prompt = f"""
         You are a professional technical recruiter. Analyze the following CV text and provide a detailed assessment.
         
@@ -27,8 +35,11 @@ class AIService:
             "experience_score": 0-30,
             "education_score": 0-10,
             "missing_sections": ["list", "of", "missing", "crucial", "information"],
-            "improvement_suggestions": ["specifically", "list", "how", "to", "improve"]
+            "improvement_suggestions": ["specifically", "list", "how", "to", "improve"],
+            "suggested_categories": ["Category Name 1", "Category Name 2"]
         }}
+        
+        {categories_prompt}
         
         Evaluation criteria (must sum to total_score):
         1. Professionalism and formatting (max 20)
@@ -196,3 +207,50 @@ class AIService:
         except Exception as e:
             print(f"Error in chat: {str(e)}")
             return "I'm having trouble connecting right now. Please try again later."
+    @staticmethod
+    def match_categories(query, categories_data):
+        """
+        Matches a search query to a list of job categories using OpenAI.
+        categories_data is a list of dicts: [{'name': '...', 'keywords': [...]}, ...]
+        """
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if not api_key:
+            return []
+            
+        client = OpenAI(api_key=api_key)
+        
+        prompt = f"""
+        Given the following search query from a job seeker, identify the most relevant job categories from the provided list.
+        A query might match multiple categories.
+        
+        Return your response ONLY as a JSON object with a key "matched_categories" containing a list of category names.
+        {{
+            "matched_categories": ["Category 1", "Category 2"]
+        }}
+        
+        If no categories match, return {{"matched_categories": []}}.
+        
+        SEARCH QUERY: {query}
+        
+        AVAILABLE CATEGORIES:
+        {json.dumps(categories_data)}
+        """
+        
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a job search assistant. You map queries to job categories and return ONLY a JSON object."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3, 
+                max_tokens=500,
+                response_format={ "type": "json_object" }
+            )
+            
+            content = response.choices[0].message.content.strip()
+            data = json.loads(content)
+            return data.get("matched_categories", [])
+        except Exception as e:
+            print(f"Error in category matching: {str(e)}")
+            return []
