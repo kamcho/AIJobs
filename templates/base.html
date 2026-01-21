@@ -566,7 +566,7 @@
                 </a>
                 {% endif %}
 
-                {% if user.is_authenticated %}
+                {% if user.is_authenticated and user.role != 'Admin' %}
                 <div class="notification-bell">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -602,7 +602,9 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
+                {% if user.is_authenticated %}
                 <a href="{% url 'job_list' %}" class="nav-link {% if 'job' in request.path %}active{% endif %}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -635,6 +637,7 @@
                     <span>Applications</span>
                 </a>
 
+                {% if user.role != 'Admin' %}
                 <a href="{% url 'wishlist_list' %}"
                     class="nav-link {% if 'wishlist' in request.path %}active{% endif %}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -643,6 +646,7 @@
                     </svg>
                     <span>Saved Jobs</span>
                 </a>
+                {% endif %}
 
                 {% if user.role == 'Admin' %}
                 <a href="{% url 'create_company' %}"
@@ -656,7 +660,17 @@
                     </svg>
                     <span>Add Company</span>
                 </a>
+                <a href="{% url 'add_jobs_ai' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'add_jobs_ai' %}active{% endif %}"
+                    style="color: #10b981; font-weight: 600;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                    <span>Add Jobs AI</span>
+                </a>
                 {% endif %}
+                {% if user.role != 'Admin' %}
                 <a href="{% url 'subscription_page' %}"
                     class="nav-link {% if 'subscription' in request.path %}active{% endif %}"
                     style="color: #fbbf24; font-weight: 700;">
@@ -668,6 +682,7 @@
                     </svg>
                     <span>Premium</span>
                 </a>
+                {% endif %}
 
                 <div class="user-profile">
                     <div class="user-avatar">{{ user.email|slice:":1"|upper }}</div>

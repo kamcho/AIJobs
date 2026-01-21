@@ -155,7 +155,15 @@ def apply_via_email(request, pk):
             has_active_subscription = False
             try:
                 if hasattr(request.user, 'subscription'):
-                     has_active_subscription = request.user.subscription.is_active
+                    subscription = request.user.subscription
+                    from django.utils import timezone
+                    # Check if subscription is active and not expired
+                    if subscription.is_active:
+                        if subscription.expiry_date:
+                            has_active_subscription = subscription.expiry_date > timezone.now()
+                        else:
+                            # If no expiry date, consider it active if is_active is True
+                            has_active_subscription = True
             except Exception:
                 pass
 
@@ -258,7 +266,28 @@ def apply_via_email(request, pk):
     else:
         form = ApplicationForm(user=request.user)
         
-    return render(request, 'jobs/email_application.html', {'form': form, 'job': job, 'has_applied': has_applied})
+        # Check subscription status for GET request
+        has_active_subscription = False
+        try:
+            if hasattr(request.user, 'subscription'):
+                subscription = request.user.subscription
+                from django.utils import timezone
+                # Check if subscription is active and not expired
+                if subscription.is_active:
+                    if subscription.expiry_date:
+                        has_active_subscription = subscription.expiry_date > timezone.now()
+                    else:
+                        # If no expiry date, consider it active if is_active is True
+                        has_active_subscription = True
+        except Exception:
+            pass
+        
+    return render(request, 'jobs/email_application.html', {
+        'form': form, 
+        'job': job, 
+        'has_applied': has_applied,
+        'has_active_subscription': has_active_subscription
+    })
 
 from django.contrib.auth import login
 
@@ -781,3 +810,201 @@ def bulk_update_application_status(request):
             return redirect(reverse('job_analytics', kwargs={'pk': job_pk}) + '#applicant-pool')
             
     return redirect('dashboard')
+
+@login_required
+def add_jobs_ai(request):
+    """
+    AI-powered job listing creation page.
+    GET: Shows textarea form
+    POST with action='process': Processes text and shows preview
+    POST with action='confirm': Creates the job listing and company
+    """
+    # Check if user has permission (Admin or Employer)
+    if not (request.user.role == 'Admin' or request.user.role == 'Employer'):
+        messages.error(request, "You do not have permission to post jobs.")
+        return redirect('dashboard')
+    
+    # If Employer, check if they have an assigned company (but allow AI creation for new companies)
+    # We'll handle company assignment later
+    
+    if request.method == 'POST':
+        action = request.POST.get('action', 'process')
+        
+        if action == 'process':
+            # Process the text input
+            text = request.POST.get('text', '').strip()
+            if not text:
+                messages.error(request, "Please provide job listing text.")
+                return render(request, 'jobs/add_jobs_ai.html', {
+                    'text': text
+                })
+            
+            # Get all existing companies for fuzzy matching
+            existing_companies = list(Company.objects.values('id', 'name'))
+            
+            # Get all job categories
+            categories_data = list(JobCategory.objects.values('name', 'keywords'))
+            
+            # Call AI service to parse the text
+            parsed_data = AIService.create_job_listing(text, existing_companies, categories_data)
+            
+            if not parsed_data:
+                messages.error(request, "Failed to parse job listing. Please try again or check your OpenAI API key.")
+                return render(request, 'jobs/add_jobs_ai.html', {
+                    'text': text
+                })
+            
+            # Store parsed data in session for confirmation step
+            request.session['ai_job_parsed_data'] = parsed_data
+            request.session['ai_job_original_text'] = text
+            
+            # Prepare context for preview
+            company_data = parsed_data.get('company', {})
+            job_data = parsed_data.get('job_listing', {})
+            requirements = parsed_data.get('requirements', [])
+            similar_companies = parsed_data.get('similar_companies', [])
+            
+            # Get full company objects for similar companies with similarity scores
+            similar_company_list = []
+            if similar_companies:
+                company_ids = [c['id'] for c in similar_companies]
+                company_objects = Company.objects.filter(id__in=company_ids)
+                company_dict = {c.id: c for c in company_objects}
+                # Create list with company objects and similarity scores
+                for similar_comp in similar_companies:
+                    comp_id = similar_comp['id']
+                    if comp_id in company_dict:
+                        similar_company_list.append({
+                            'company': company_dict[comp_id],
+                            'similarity': round(similar_comp['similarity'] * 100, 1)  # Convert to percentage
+                        })
+            
+            # Get category object if category name was provided
+            category_obj = None
+            if job_data.get('category'):
+                try:
+                    category_obj = JobCategory.objects.get(name=job_data['category'])
+                except JobCategory.DoesNotExist:
+                    # Try to find by similar name
+                    categories = JobCategory.objects.all()
+                    for cat in categories:
+                        if job_data['category'].lower() in cat.name.lower() or cat.name.lower() in job_data['category'].lower():
+                            category_obj = cat
+                            break
+            
+            context = {
+                'company_data': company_data,
+                'job_data': job_data,
+                'requirements': requirements,
+                'similar_companies': similar_company_list,
+                'category': category_obj,
+                'preview_mode': True,
+            }
+            
+            return render(request, 'jobs/add_jobs_ai_preview.html', context)
+        
+        elif action == 'confirm':
+            # Create the job listing and company
+            parsed_data = request.session.get('ai_job_parsed_data')
+            if not parsed_data:
+                messages.error(request, "Session expired. Please try again.")
+                return redirect('add_jobs_ai')
+            
+            company_data = parsed_data.get('company', {})
+            job_data = parsed_data.get('job_listing', {})
+            requirements = parsed_data.get('requirements', [])
+            
+            # Determine company to use
+            selected_company_id = request.POST.get('selected_company_id')
+            create_new_company = request.POST.get('create_new_company') == 'yes'
+            
+            try:
+                with transaction.atomic():
+                    # Handle company
+                    if create_new_company or not selected_company_id:
+                        # Create new company
+                        company, created = Company.objects.get_or_create(
+                            name=company_data.get('name', ''),
+                            defaults={
+                                'description': company_data.get('description', ''),
+                                'website': company_data.get('website', ''),
+                                'location': company_data.get('location', ''),
+                                'primary_phone': company_data.get('primary_phone', ''),
+                                'secondary_phone': company_data.get('secondary_phone', ''),
+                                'primary_email': company_data.get('primary_email', ''),
+                                'secondary_email': company_data.get('secondary_email', ''),
+                                'founded_in': company_data.get('founded_in'),
+                            }
+                        )
+                        if not created:
+                            # Update existing company if name matches exactly
+                            company.description = company_data.get('description', company.description) or company.description
+                            company.website = company_data.get('website', company.website) or company.website
+                            company.location = company_data.get('location', company.location) or company.location
+                            company.save()
+                    else:
+                        # Use existing company
+                        company = get_object_or_404(Company, id=selected_company_id)
+                    
+                    # Get or create category
+                    category_name = job_data.get('category', '')
+                    if category_name:
+                        category, _ = JobCategory.objects.get_or_create(name=category_name)
+                    else:
+                        messages.warning(request, "No category specified. Using default.")
+                        category = JobCategory.objects.first()
+                        if not category:
+                            messages.error(request, "No job categories exist. Please create categories first.")
+                            return redirect('add_jobs_ai')
+                    
+                    # Create job listing
+                    expiry_date = None
+                    if job_data.get('expiry_date'):
+                        try:
+                            from datetime import datetime
+                            expiry_date = datetime.strptime(job_data['expiry_date'], '%Y-%m-%d').date()
+                        except:
+                            pass
+                    
+                    job = JobListing.objects.create(
+                        title=job_data.get('title', ''),
+                        category=category,
+                        company=company.name,
+                        company_profile=company,
+                        description=job_data.get('description', ''),
+                        location=job_data.get('location', ''),
+                        url=job_data.get('url') or job_data.get('application_url') or 'https://example.com',
+                        terms=job_data.get('terms', 'Full Time'),
+                        education_level_required=job_data.get('education_level_required', 'None'),
+                        experience_required_years=job_data.get('experience_required_years'),
+                        application_method=job_data.get('application_method', 'website'),
+                        employer_email=job_data.get('employer_email', ''),
+                        application_url=job_data.get('application_url', ''),
+                        application_instructions=job_data.get('application_instructions', ''),
+                        expiry_date=expiry_date,
+                    )
+                    
+                    # Create requirements
+                    for req in requirements:
+                        JobRequirement.objects.create(
+                            job=job,
+                            description=req.get('description', ''),
+                            is_mandatory=req.get('is_mandatory', True)
+                        )
+                    
+                    # Clear session data
+                    request.session.pop('ai_job_parsed_data', None)
+                    request.session.pop('ai_job_original_text', None)
+                    
+                    messages.success(request, f"Job listing '{job.title}' created successfully!")
+                    return redirect('job_detail', pk=job.pk)
+                    
+            except Exception as e:
+                messages.error(request, f"Error creating job listing: {str(e)}")
+                return redirect('add_jobs_ai')
+    
+    # GET request - show form
+    original_text = request.session.get('ai_job_original_text', '')
+    return render(request, 'jobs/add_jobs_ai.html', {
+        'text': original_text
+    })

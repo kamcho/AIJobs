@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Job Listing - JobMatch{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .preview-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+        margin-bottom: 24px;
+    }
+
+    .section-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 24px;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .data-item {
+        margin-bottom: 20px;
+    }
+
+    .data-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .data-value {
+        font-size: 1rem;
+        color: var(--text-main);
+        font-weight: 500;
+        word-wrap: break-word;
+    }
+
+    .data-value.empty {
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .description-box {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 12px;
+        white-space: pre-wrap;
+        line-height: 1.7;
+        color: var(--text-muted);
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .requirement-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .requirement-badge {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--primary);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .requirement-badge.optional {
+        background: rgba(148, 163, 184, 0.2);
+        color: var(--text-muted);
+    }
+
+    .similar-companies-box {
+        background: rgba(255, 193, 7, 0.1);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .similar-companies-title {
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #ffc107;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .similar-company-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .similar-company-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--primary);
+    }
+
+    .similar-company-item.selected {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: var(--primary);
+    }
+
+    .similarity-score {
+        display: inline-block;
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 12px;
+    }
+
+    .radio-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .radio-option:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .radio-option input[type="radio"] {
+        cursor: pointer;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="admin-container">
+    <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 8px;">Review Job Listing</h1>
+        <p style="color: var(--text-muted);">
+            Please review the extracted information below. Make any necessary adjustments before confirming.
+        </p>
+    </div>
+
+    <form method="POST" class="preview-card">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="confirm">
+
+        <!-- Similar Companies Alert -->
+        {% if similar_companies %}
+        <div class="similar-companies-box">
+            <div class="similar-companies-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Similar Companies Found
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">
+                The following companies in our database have similar names. Would you like to link this job to an existing company, or create a new one?
+            </p>
+            
+            {% for item in similar_companies %}
+            <div class="similar-company-item" onclick="selectCompany({{ item.company.id }})">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: var(--text-main);">{{ item.company.name }}</strong>
+                        {% if item.company.location %}
+                        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">{{ item.company.location }}</div>
+                        {% endif %}
+                    </div>
+                    <span class="similarity-score">{{ item.similarity }}% match</span>
+                </div>
+                {% if item.company.description %}
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">
+                    {{ item.company.description|truncatewords:20 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="company_choice" value="existing" id="use-existing" onchange="updateCompanyChoice()">
+                    <span>Use one of the companies above</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="company_choice" value="new" id="create-new" checked onchange="updateCompanyChoice()">
+                    <span>Create new company</span>
+                </label>
+            </div>
+
+            <input type="hidden" name="selected_company_id" id="selected-company-id" value="">
+            <input type="hidden" name="create_new_company" id="create-new-company" value="yes">
+        </div>
+        {% else %}
+        <input type="hidden" name="create_new_company" value="yes">
+        {% endif %}
+
+        <!-- Company Information -->
+        <div class="section-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Company Information
+        </div>
+
+        <div class="data-grid">
+            <div class="data-item">
+                <div class="data-label">Company Name</div>
+                <div class="data-value">{{ company_data.name|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Location</div>
+                <div class="data-value">{{ company_data.location|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Website</div>
+                <div class="data-value">{{ company_data.website|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Email</div>
+                <div class="data-value">{{ company_data.primary_email|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Phone</div>
+                <div class="data-value">{{ company_data.primary_phone|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Founded</div>
+                <div class="data-value">{{ company_data.founded_in|default:"—" }}</div>
+            </div>
+            <div class="data-item full-width">
+                <div class="data-label">Description</div>
+                <div class="description-box">{{ company_data.description|default:"—" }}</div>
+            </div>
+        </div>
+
+        <!-- Job Listing Information -->
+        <div class="section-title" style="margin-top: 40px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            Job Listing Information
+        </div>
+
+        <div class="data-grid">
+            <div class="data-item full-width">
+                <div class="data-label">Job Title</div>
+                <div class="data-value" style="font-size: 1.25rem; font-weight: 600;">{{ job_data.title|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Category</div>
+                <div class="data-value">{{ category.name|default:job_data.category|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Job Terms</div>
+                <div class="data-value">{{ job_data.terms|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Location</div>
+                <div class="data-value">{{ job_data.location|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Education Required</div>
+                <div class="data-value">{{ job_data.education_level_required|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Experience (Years)</div>
+                <div class="data-value">{{ job_data.experience_required_years|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Application Method</div>
+                <div class="data-value">{{ job_data.application_method|default:"—" }}</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Application URL</div>
+                <div class="data-value">
+                    {% if job_data.application_url %}
+                        {{ job_data.application_url }}
+                    {% elif job_data.url %}
+                        {{ job_data.url }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+            <div class="data-item full-width">
+                <div class="data-label">Job Description</div>
+                <div class="description-box">{{ job_data.description|default:"—" }}</div>
+            </div>
+            {% if job_data.application_instructions %}
+            <div class="data-item full-width">
+                <div class="data-label">Application Instructions</div>
+                <div class="description-box">{{ job_data.application_instructions }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Requirements -->
+        {% if requirements %}
+        <div class="section-title" style="margin-top: 40px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Job Requirements
+        </div>
+
+        <ul class="requirements-list">
+            {% for req in requirements %}
+            <li class="requirement-item">
+                <span class="requirement-badge {% if not req.is_mandatory %}optional{% endif %}">
+                    {% if req.is_mandatory %}Mandatory{% else %}Optional{% endif %}
+                </span>
+                <span class="data-value">{{ req.description }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 16px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Confirm and Create Job Listing
+            </button>
+            <a href="{% url 'add_jobs_ai' %}" class="btn btn-secondary" style="padding: 16px;">Back to Edit</a>
+        </div>
+    </form>
+</main>
+
+<script>
+    let selectedCompanyId = null;
+
+    function selectCompany(companyId) {
+        selectedCompanyId = companyId;
+        document.getElementById('selected-company-id').value = companyId;
+        document.getElementById('use-existing').checked = true;
+        document.getElementById('create-new-company').value = 'no';
+        
+        // Update visual selection
+        document.querySelectorAll('.similar-company-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.currentTarget.classList.add('selected');
+    }
+
+    function updateCompanyChoice() {
+        const useExisting = document.getElementById('use-existing').checked;
+        if (useExisting && selectedCompanyId) {
+            document.getElementById('create-new-company').value = 'no';
+            document.getElementById('selected-company-id').value = selectedCompanyId;
+        } else {
+            document.getElementById('create-new-company').value = 'yes';
+            document.getElementById('selected-company-id').value = '';
+            selectedCompanyId = null;
+            document.querySelectorAll('.similar-company-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+    }
+</script>
+{% endblock %}

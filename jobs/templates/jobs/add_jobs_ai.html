@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Job with AI - JobMatch{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+    }
+
+    .section-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 24px;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .form-input, textarea.form-input {
+        width: 100%;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-main);
+        font-family: var(--font-body);
+        font-size: 1rem;
+        resize: vertical;
+        transition: all 0.2s;
+    }
+
+    textarea.form-input {
+        min-height: 400px;
+        font-family: 'Courier New', monospace;
+        line-height: 1.6;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .help-text {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-top: 8px;
+    }
+
+    .info-box {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: var(--text-main);
+        font-size: 0.95rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="admin-container">
+    <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 8px;">Add Job with AI</h1>
+        <p style="color: var(--text-muted);">
+            Paste the job listing text below. Our AI will extract company information, job details, and requirements automatically.
+        </p>
+    </div>
+
+    <form method="POST" class="form-card">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="process">
+
+        <div class="info-box">
+            <p>
+                <strong>💡 Tip:</strong> You can paste job descriptions from websites, emails, or documents. 
+                The AI will automatically parse company information, job title, description, location, requirements, and more.
+            </p>
+        </div>
+
+        <div class="section-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Job Listing Text
+        </div>
+
+        <div class="form-group">
+            <label for="text">Paste Job Listing Text</label>
+            <textarea 
+                id="text" 
+                name="text" 
+                class="form-input" 
+                placeholder="Paste the complete job listing text here... This can include job title, company information, description, requirements, application instructions, etc."
+                required>{{ text }}</textarea>
+            <div class="help-text">
+                The AI will analyze this text and extract all relevant information including company details, job requirements, and application methods.
+            </div>
+        </div>
+
+        <div style="margin-top: 48px; display: flex; gap: 16px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 16px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                Process with AI
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 16px;">Cancel</a>
+        </div>
+    </form>
+</main>
+{% endblock %}

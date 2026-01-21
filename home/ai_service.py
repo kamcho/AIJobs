@@ -1,5 +1,6 @@
 import json
 import datetime
+from difflib import SequenceMatcher
 from home.models import AIChatMessage
 from openai import OpenAI
 from django.conf import settings
@@ -323,3 +324,164 @@ class AIService:
         except Exception as e:
             print(f"Error in category matching: {str(e)}")
             return []
+
+    @staticmethod
+    def _fuzzy_match_company(company_name, existing_companies, threshold=0.75):
+        """
+        Performs fuzzy matching to find similar company names.
+        Returns list of tuples: (company_id, company_name, similarity_score)
+        """
+        matches = []
+        company_name_lower = company_name.lower().strip()
+        
+        for company in existing_companies:
+            existing_name_lower = company['name'].lower().strip()
+            similarity = SequenceMatcher(None, company_name_lower, existing_name_lower).ratio()
+            
+            if similarity >= threshold:
+                matches.append({
+                    'id': company['id'],
+                    'name': company['name'],
+                    'similarity': round(similarity, 3)
+                })
+        
+        # Sort by similarity (highest first)
+        matches.sort(key=lambda x: x['similarity'], reverse=True)
+        return matches
+
+    @staticmethod
+    def create_job_listing(text, existing_companies=None, categories_data=None):
+        """
+        Parses job listing text using OpenAI and extracts Company and JobListing data.
+        Uses function calling to structure the response.
+        
+        Args:
+            text: The job listing text to parse
+            existing_companies: List of dicts with {'id', 'name'} of existing companies
+            categories_data: List of dicts with {'name', 'keywords'} of job categories
+            
+        Returns:
+            Dict with 'company', 'job_listing', 'requirements', and 'similar_companies' (if any found)
+        """
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if not api_key:
+            return None
+            
+        client = OpenAI(api_key=api_key)
+        
+        # Prepare existing companies data for AI
+        companies_list = existing_companies if existing_companies else []
+        companies_names = [c['name'] for c in companies_list]
+        
+        # Prepare categories data
+        categories_list = categories_data if categories_data else []
+        category_names = [c['name'] for c in categories_list]
+        
+        # Define the function schema for OpenAI function calling
+        functions = [
+            {
+                "name": "extract_job_listing_data",
+                "description": "Extract company and job listing information from the provided text",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "company": {
+                            "type": "object",
+                            "description": "Company information extracted from the text",
+                            "properties": {
+                                "name": {"type": "string", "description": "Company name"},
+                                "description": {"type": "string", "description": "Company description"},
+                                "website": {"type": "string", "description": "Company website URL"},
+                                "location": {"type": "string", "description": "Company location/headquarters"},
+                                "primary_phone": {"type": "string", "description": "Primary phone number"},
+                                "secondary_phone": {"type": "string", "description": "Secondary phone number"},
+                                "primary_email": {"type": "string", "description": "Primary email address"},
+                                "secondary_email": {"type": "string", "description": "Secondary email address"},
+                                "founded_in": {"type": "integer", "description": "Year company was founded (optional)"}
+                            },
+                            "required": ["name"]
+                        },
+                        "job_listing": {
+                            "type": "object",
+                            "description": "Job listing information",
+                            "properties": {
+                                "title": {"type": "string", "description": "Job title"},
+                                "category": {"type": "string", "description": f"Job category name from: {', '.join(category_names) if category_names else 'any relevant category'}"},
+                                "description": {"type": "string", "description": "Full job description"},
+                                "location": {"type": "string", "description": "Job location"},
+                                "url": {"type": "string", "description": "Application URL or job posting URL"},
+                                "terms": {"type": "string", "description": "Job terms: Full Time, Part Time, Contract, Freelance, Internship, Attachment, or None", "enum": ["Full Time", "Part Time", "Contract", "Freelance", "Internship", "Attachment", "None"]},
+                                "education_level_required": {"type": "string", "description": "Required education level", "enum": ["Primary", "Secondary", "College", "University", "None"]},
+                                "experience_required_years": {"type": "integer", "description": "Years of experience required"},
+                                "application_method": {"type": "string", "description": "How to apply", "enum": ["email", "website", "google_form", "other"]},
+                                "employer_email": {"type": "string", "description": "Email for applications"},
+                                "application_url": {"type": "string", "description": "Application URL"},
+                                "application_instructions": {"type": "string", "description": "Special application instructions"},
+                                "expiry_date": {"type": "string", "description": "Job expiry date in YYYY-MM-DD format"}
+                            },
+                            "required": ["title", "description", "location"]
+                        },
+                        "requirements": {
+                            "type": "array",
+                            "description": "List of job requirements",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "description": {"type": "string", "description": "Requirement description"},
+                                    "is_mandatory": {"type": "boolean", "description": "Whether this requirement is mandatory"}
+                                },
+                                "required": ["description"]
+                            }
+                        }
+                    },
+                    "required": ["company", "job_listing", "requirements"]
+                }
+            }
+        ]
+        
+        system_prompt = f"""You are a job listing parser. Extract structured information from job posting text.
+        
+Available job categories: {', '.join(category_names) if category_names else 'Any relevant category'}
+Existing companies in database: {', '.join(companies_names) if companies_names else 'None'}
+
+Extract all relevant information accurately. For company name, check if it matches any existing company name from the list provided.
+If the company name is very similar to an existing one (e.g., 'Arrotech Company' vs 'Arrotech Solutions'), note this in your response.
+"""
+        
+        user_prompt = f"""Parse the following job listing text and extract company information, job listing details, and requirements:
+
+{text}
+"""
+        
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                functions=functions,
+                function_call={"name": "extract_job_listing_data"},
+                temperature=0.3,
+                max_tokens=2000
+            )
+            
+            # Extract function call result
+            function_call = response.choices[0].message.function_call
+            if function_call and function_call.name == "extract_job_listing_data":
+                parsed_data = json.loads(function_call.arguments)
+                
+                # Perform fuzzy matching on company name
+                company_name = parsed_data.get('company', {}).get('name', '')
+                similar_companies = []
+                if company_name and existing_companies:
+                    similar_companies = AIService._fuzzy_match_company(company_name, existing_companies)
+                
+                parsed_data['similar_companies'] = similar_companies
+                return parsed_data
+            else:
+                return None
+                
+        except Exception as e:
+            print(f"Error in job listing creation: {str(e)}")
+            return None

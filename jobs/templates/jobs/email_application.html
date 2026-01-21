@@ -248,11 +248,18 @@
                         <a href="#" id="toggle-upload-link"
                             style="font-size: 0.85rem; color: var(--primary); text-decoration: none;">Or upload file
                             instead</a>
+                        {% if has_active_subscription %}
                         <button type="submit" name="action" value="generate_ai" id="generate-ai-btn" class="btn"
                             disabled
                             style="background: var(--primary); color: white; font-size: 0.9rem; padding: 10px 20px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; opacity: 0.5;">
                             ✨ Generate with AI
                         </button>
+                        {% else %}
+                        <a href="{% url 'subscription_page' %}" class="btn"
+                            style="background: #fbbf24; color: white; font-size: 0.9rem; padding: 10px 20px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;">
+                            💎 Subscribe to generate documents
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -339,7 +346,9 @@
                         textContainer.style.display = 'none';
                         uploadContainer.style.display = 'block';
                         thisLink.textContent = "Switch to AI Generator";
-                        aiBtn.style.display = 'none'; // Hide AI button when uploading
+                        if (aiBtn) {
+                            aiBtn.style.display = 'none'; // Hide AI button when uploading
+                        }
 
                         // Clear text area so validation passes if they upload
                         document.querySelector('textarea[name="cover_letter_text"]').value = '';
@@ -348,7 +357,9 @@
                         textContainer.style.display = 'block';
                         uploadContainer.style.display = 'none';
                         thisLink.textContent = "Or upload file instead";
-                        aiBtn.style.display = 'inline-block';
+                        if (aiBtn) {
+                            aiBtn.style.display = 'inline-block';
+                        }
 
                         // Clear file input
                         document.querySelector('input[name="cover_letter_file"]').value = '';

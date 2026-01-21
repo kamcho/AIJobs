@@ -366,7 +366,9 @@
             <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
                 (Opens Google Form)
             </p>
-
+            <a href="{% url 'apply_via_email' job.pk %}" class="btn-apply">
+                📧 Generate Cover Letter
+            </a>
             {% elif job.application_method == 'website' %}
             <a href="{{ job.application_url|default:job.url }}" target="_blank" class="btn-apply">
                 🌐 {{ job.get_application_method_display_text }}
@@ -374,7 +376,9 @@
             <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
                 (Opens external website)
             </p>
-
+            <a href="{% url 'apply_via_email' job.pk %}" class="btn-apply">
+                📧 Generate Cover Letter
+            </a>
             {% else %}
             <a href="{{ job.application_url|default:job.url }}" target="_blank" class="btn-apply">
                 {{ job.get_application_method_display_text }}
