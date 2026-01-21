@@ -4,7 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}JobMatch{% endblock %}</title>
+    <title>{% block title %}JobMatch - AI Powered Job Search Platform{% endblock %}</title>
+    
+    {% block meta_description %}
+    <meta name="description" content="JobMatch - Find your dream job with AI-powered job search. Upload your CV, get matched with opportunities, and generate professional cover letters automatically.">
+    {% endblock %}
+    
+    {% block meta_keywords %}
+    <meta name="keywords" content="jobs, job search, employment, careers, AI jobs, job matching, CV analysis, cover letter generator, Kenya jobs, job portal">
+    {% endblock %}
+    
+    <meta name="author" content="JobMatch">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta property="og:title" content="{% block og_title %}JobMatch - AI Powered Job Search Platform{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Find your dream job with AI-powered job search. Upload your CV, get matched with opportunities, and generate professional cover letters automatically.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}/static/home/og-image.jpg{% endblock %}">
+    <meta property="og:site_name" content="JobMatch">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta name="twitter:title" content="{% block twitter_title %}JobMatch - AI Powered Job Search Platform{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Find your dream job with AI-powered job search. Upload your CV, get matched with opportunities, and generate professional cover letters automatically.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}/static/home/og-image.jpg{% endblock %}">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <meta name="google-site-verification" content="hQjpB6p4laNp62UvMgcVlgY7xCAZdX6ziIAMXRuSA9Y" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -754,6 +782,24 @@
     {% endif %}
 
     {% block content %}{% endblock %}
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "JobMatch",
+        "url": "{{ request.scheme }}://{{ request.get_host }}",
+        "description": "AI-powered job search platform - Find your dream job with intelligent matching and automated cover letter generation",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{{ request.scheme }}://{{ request.get_host }}{% url 'job_list' %}?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    
+    {% block structured_data %}{% endblock %}
 
     {% if user.is_authenticated and user.role == "None" %}
     <style>

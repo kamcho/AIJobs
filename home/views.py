@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from users.models import PersonalProfile, MySkill, UserDocument
 from .models import AIChatMessage
@@ -16,6 +16,19 @@ def index(request):
 
 def privacy_policy(request):
     return render(request, 'home/privacy_policy.html')
+
+def robots_txt(request):
+    """Serve robots.txt file"""
+    content = """User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /accounts/
+Disallow: /mpesa/
+
+Sitemap: {}/sitemap.xml
+""".format(request.build_absolute_uri('/').rstrip('/'))
+    return HttpResponse(content, content_type='text/plain')
 
 @login_required
 def dashboard(request):
@@ -140,6 +153,7 @@ def chat_history(request):
         for msg in messages
     ]
     return JsonResponse({'history': history})
+
 @csrf_exempt
 def contact(request):
     if request.method == 'POST':
