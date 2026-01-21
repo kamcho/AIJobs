@@ -16,6 +16,7 @@ class StaticViewSitemap(Sitemap):
 class JobListingSitemap(Sitemap):
     changefreq = 'daily'
     priority = 0.8
+    limit = 5000  # Maximum items per sitemap section
 
     def items(self):
         return JobListing.objects.filter(is_active=True).order_by('-posted_at')
@@ -29,6 +30,7 @@ class JobListingSitemap(Sitemap):
 class CompanySitemap(Sitemap):
     changefreq = 'weekly'
     priority = 0.7
+    limit = 5000
 
     def items(self):
         return Company.objects.all()
@@ -42,6 +44,7 @@ class CompanySitemap(Sitemap):
 class JobCategorySitemap(Sitemap):
     changefreq = 'weekly'
     priority = 0.6
+    limit = 5000
 
     def items(self):
         return JobCategory.objects.all()
