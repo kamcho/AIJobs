@@ -51,7 +51,7 @@ class MpesaService:
             "Password": password,
             "Timestamp": timestamp,
             "TransactionType": "CustomerPayBillOnline",
-            "Amount": 1,
+            "Amount": int(amount),
             "PartyA": phone_number,
             "PartyB": settings.MPESA_SHORTCODE,
             "PhoneNumber": phone_number,
