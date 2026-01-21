@@ -70,13 +70,65 @@ class AIService:
             return None
 
     @staticmethod
-    def generate_cover_letter(user, job):
+    def analyze_cover_letter(text):
         """
-        Generates a professional, tailored cover letter using OpenAI.
+        Analyzes Cover Letter text using OpenAI and returns a structured JSON response.
         """
         api_key = getattr(settings, 'OPENAI_API_KEY', None)
         if not api_key:
-            return "API Key not configured."
+            return None
+            
+        client = OpenAI(api_key=api_key)
+        
+        prompt = f"""
+        You are a professional HR manager. Analyze the following Cover Letter text and provide a detailed assessment.
+        
+        Return your response ONLY as a valid JSON object with the following structure:
+        {{
+            "total_score": 0-100,
+            "professionalism_score": 0-20,
+            "content_score": 0-40,
+            "tone_score": 0-20,
+            "impact_score": 0-20,
+            "missing_elements": ["list", "of", "missing", "important", "parts"],
+        }}
+        
+        Evaluation criteria (must sum to total_score):
+        1. Professionalism and formatting (max 20)
+        2. Content and alignment with industry standards (max 40)
+        3. Tone and engagement (max 20)
+        4. Overall impact and persuasiveness (max 20)
+        
+        COVER LETTER TEXT:
+        {text}
+        """
+        
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a professional recruiting assistant that evaluates Cover Letters and returns ONLY valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1000,
+                response_format={ "type": "json_object" }
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            return result
+        except Exception as e:
+            print(f"Error in cover letter analysis: {str(e)}")
+            return None
+
+    @staticmethod
+    def generate_cover_letter(user, job):
+        """
+        Generates a professional, tailored cover letter using OpenAI and includes analysis scores.
+        """
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if not api_key:
+            return None
             
         client = OpenAI(api_key=api_key)
         
@@ -134,33 +186,50 @@ class AIService:
         {job_info}
         
         INSTRUCTIONS:
-        1. Tone: Professional, confident, and enthusiastic.
-        2. Format: Use a strict formal business letter layout:
-           - [TOP LEFT] Your Name, Email, Phone
-           - [NEXT LINE] Today's Date
-           - [NEXT LINE] Hiring Manager, Job Company, Job Location
-           - [NEXT LINE] Salutation (e.g., Dear Hiring Manager,)
-        3. Content: Focus on matching the candidate's strongest skills and experiences with the specific requirements of the job.
-        4. Avoid AI-sounding clichés. Use natural, direct language.
-        5. Keep it concise (approx 350 words).
-        6. Return ONLY the final text of the cover letter.
+        1. Write the Cover Letter:
+           - Tone: Professional, confident, and enthusiastic.
+           - Format: Strict formal business letter layout.
+           - Content: Match strongest skills to job requirements.
+           - Length: ~350 words.
+           
+        2. Analyze the Letter (Self-Evaluation):
+           - Score the letter you just wrote based on these criteria:
+             a. Professionalism (0-20)
+             b. Content & Alignment (0-40)
+             c. Tone & Engagement (0-20)
+             d. Overall Impact (0-20)
+           
+        3. Return ONLY a JSON object with this structure:
+        {{
+            "content": "Full text of the cover letter...",
+            "analysis": {{
+                "total_score": 0-100,
+                "professionalism_score": 0-20,
+                "content_score": 0-40,
+                "tone_score": 0-20,
+                "impact_score": 0-20,
+                "missing_elements": [],
+                "improvement_suggestions": []
+            }}
+        }}
         """
         
         try:
             response = client.chat.completions.create(
-                model="gpt-4o", # Using gpt-4o for better quality
+                model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a professional cover letter writer."},
+                    {"role": "system", "content": "You are a professional cover letter writer who outputs JSON."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=1500
+                max_tokens=1500,
+                response_format={ "type": "json_object" }
             )
             
-            return response.choices[0].message.content.strip()
+            return json.loads(response.choices[0].message.content.strip())
         except Exception as e:
             print(f"Error in cover letter generation: {str(e)}")
-            return f"Error generating cover letter: {str(e)}"
+            return None
 
     @staticmethod
     def chat(user, message):

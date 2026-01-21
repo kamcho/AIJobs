@@ -148,6 +148,36 @@ class CVAnalysis(models.Model):
     def education_pct(self):
         return (self.education_score / 10) * 100
 
+class CoverLetterAnalysis(models.Model):
+    user_document = models.OneToOneField(UserDocument, on_delete=models.CASCADE, related_name='cl_analysis')
+    total_score = models.IntegerField()
+    professionalism_score = models.IntegerField()
+    content_score = models.IntegerField()
+    tone_score = models.IntegerField()
+    impact_score = models.IntegerField()
+    missing_elements = models.TextField(blank=True, null=True)
+    raw_json_response = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"CL Analysis for {self.user_document.user.email}"
+
+    @property
+    def professionalism_pct(self):
+        return (self.professionalism_score / 20) * 100
+
+    @property
+    def content_pct(self):
+        return (self.content_score / 40) * 100
+
+    @property
+    def tone_pct(self):
+        return (self.tone_score / 20) * 100
+
+    @property
+    def impact_pct(self):
+        return (self.impact_score / 20) * 100
+
 class MySkill(models.Model):
     PROFICIENCY_CHOICES = (
         ('Beginner', 'Beginner'),

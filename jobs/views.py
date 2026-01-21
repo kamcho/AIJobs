@@ -5,12 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from .models import JobListing, JobCategory, Application, JobRequirement, Company, Wishlist
-from .forms import ApplicationForm, JobListingForm, JobRequirementForm, CompanyForm
+from .forms import ApplicationForm, JobListingForm, JobRequirementForm, CompanyForm, PublicApplicationForm
 from .services import EmailService
 from .utils import DocumentGenerator
 from home.ai_service import AIService
 from django.contrib.auth.decorators import user_passes_test
 from django.db import transaction
+import json
+import uuid
+from django.contrib.auth import get_user_model
+from users.models import UserDocument, DocumentType, CoverLetterAnalysis, PersonalProfile
 
 def job_list(request):
     query = request.GET.get('q', '')
@@ -117,20 +121,55 @@ def apply_via_email(request, pk):
     if not target_exists:
         messages.error(request, "This job listing is missing application details. Please contact support.")
         return redirect('job_detail', pk=pk)
+
+    # Check for existing application
+    has_applied = Application.objects.filter(user=request.user, job=job).exists()
         
     if request.method == 'POST':
+        if has_applied:
+            messages.error(request, "You have already applied for this job.")
+            return redirect('job_detail', pk=pk)
+
         action = request.POST.get('action')
         form = ApplicationForm(request.POST, request.FILES, user=request.user)
         
         if action == 'generate_ai':
-            generated_text = AIService.generate_cover_letter(request.user, job)
-            # Re-initialize form with generated text and current data (like cv_used)
+            generated_data = AIService.generate_cover_letter(request.user, job)
+            
+            # Handle potential None response
+            if not generated_data:
+                messages.error(request, "Failed to generate cover letter. Please try again.")
+                return redirect('apply_via_email', pk=pk)
+
+            # generated_data is now a dict: {'content': '...', 'analysis': {...}}
+            generated_text = generated_data.get('content', '')
+            analysis_data = generated_data.get('analysis', {})
+            
+            # Re-initialize form with generated text and current data
             form = ApplicationForm(user=request.user, initial={
                 'cover_letter_text': generated_text,
                 'cv_used': request.POST.get('cv_used')
             })
-            messages.info(request, "AI Cover Letter generated! You can review and edit it below.")
-            return render(request, 'jobs/email_application.html', {'form': form, 'job': job})
+            
+            # Check subscription for AI features
+            has_active_subscription = False
+            try:
+                if hasattr(request.user, 'subscription'):
+                     has_active_subscription = request.user.subscription.is_active
+            except Exception:
+                pass
+
+            # Pass data to template
+            context = {
+                'form': form, 
+                'job': job,
+                'generated_text': generated_text, # For read-only display or strict usage
+                'analysis_data_json': json.dumps(analysis_data), # To store in hidden field
+                'has_applied': has_applied,
+                'has_active_subscription': has_active_subscription
+            }
+            messages.info(request, "AI Cover Letter generated! Review the preview below.")
+            return render(request, 'jobs/email_application.html', context)
 
         if form.is_valid():
             application = form.save(commit=False)
@@ -138,16 +177,65 @@ def apply_via_email(request, pk):
             application.job = job
             application.status = 'Under Review'
             
-            # If AI text was provided, generate document based on chosen format
-            if form.cleaned_data.get('cover_letter_text'):
-                text_content = form.cleaned_data.get('cover_letter_text')
-                application.cover_letter_text = text_content
+            # If AI text was used (checked via hidden fields or form data)
+            # We use the text from the form (which matches generated if read-only)
+            text_content = form.cleaned_data.get('cover_letter_text')
+            uploaded_file = form.cleaned_data.get('cover_letter_file')
+            analysis_json = request.POST.get('analysis_data_json')
+
+            if text_content:
+                # 1. Create UserDocument
+                # Ensure DocumentType exists
+                doc_type, _ = DocumentType.objects.get_or_create(name='Cover Letter')
+                
+                # Create file content
                 file_format = form.cleaned_data.get('file_format', 'pdf')
                 filename = f"cover_letter_{request.user.id}_{job.id}.{file_format}"
-                
                 doc_content = DocumentGenerator.get_document_content(text_content, file_format)
-                application.cover_letter.save(filename, ContentFile(doc_content), save=False)
                 
+                user_doc = UserDocument.objects.create(
+                    user=request.user,
+                    document_type=doc_type,
+                    extracted_content=text_content
+                )
+                user_doc.file.save(filename, ContentFile(doc_content))
+                
+                # 2. Save Analysis if available
+                if analysis_json:
+                    try:
+                        data = json.loads(analysis_json)
+                        CoverLetterAnalysis.objects.create(
+                            user_document=user_doc,
+                            total_score=data.get('total_score', 0),
+                            professionalism_score=data.get('professionalism_score', 0),
+                            content_score=data.get('content_score', 0),
+                            tone_score=data.get('tone_score', 0),
+                            impact_score=data.get('impact_score', 0),
+                            missing_elements=json.dumps(data.get('missing_elements', [])),
+                            raw_json_response=data
+                        )
+                    except json.JSONDecodeError:
+                        pass # Handle invalid JSON gracefully
+                
+                # 3. Link to Application
+                application.cover_letter_text = text_content
+                application.cover_letter_document = user_doc
+                # Also save the file to the application's own field for redundancy/legacy support
+                application.cover_letter.save(filename, ContentFile(doc_content), save=False)
+            
+            elif uploaded_file:
+                 # Handle Manual Upload
+                 application.cover_letter = uploaded_file
+                 
+                 # Create a UserDocument for consistency (without extract/analysis for now)
+                 doc_type, _ = DocumentType.objects.get_or_create(name='Cover Letter')
+                 user_doc = UserDocument.objects.create(
+                    user=request.user,
+                    document_type=doc_type,
+                    file=uploaded_file
+                 )
+                 application.cover_letter_document = user_doc
+
             application.save()
             
             # Send Email
@@ -159,7 +247,6 @@ def apply_via_email(request, pk):
             )
             
             if success:
-                # Check if message indicates materials sent to user's email
                 if "sent to your email" in message.lower() or "forwarded to your email" in message.lower():
                     messages.info(request, f"📧 {message}")
                 else:
@@ -171,7 +258,151 @@ def apply_via_email(request, pk):
     else:
         form = ApplicationForm(user=request.user)
         
-    return render(request, 'jobs/email_application.html', {'form': form, 'job': job})
+    return render(request, 'jobs/email_application.html', {'form': form, 'job': job, 'has_applied': has_applied})
+
+from django.contrib.auth import login
+
+def public_job_application(request, pk):
+    job = get_object_or_404(JobListing, pk=pk)
+    
+    if request.method == 'POST':
+        form = PublicApplicationForm(request.POST, request.FILES)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            full_name = form.cleaned_data['full_name']
+            phone = form.cleaned_data['phone']
+            cv_file = form.cleaned_data['cv_file']
+            cl_text = form.cleaned_data.get('cover_letter_text')
+            cl_file = form.cleaned_data.get('cover_letter_file')
+            
+            User = get_user_model()
+            user = User.objects.filter(email=email).first()
+            
+            is_new_user = False
+            if not user:
+                # Create user with phone number as password
+                user = User.objects.create_user(email=email, password=phone, role='Job Seeker')
+                is_new_user = True
+            
+            # Create/Update Profile
+            profile, created = PersonalProfile.objects.get_or_create(user=user)
+            if not profile.full_name:
+                profile.full_name = full_name
+            if not profile.phone_primary:
+                profile.phone_primary = phone
+            profile.save()
+            
+            # --- CV handling ---
+            cv_doc_type, _ = DocumentType.objects.get_or_create(name='CV')
+            
+            # Extract text from CV for analysis
+            cv_text = DocumentGenerator.extract_text_from_file(cv_file)
+            
+            cv_doc = UserDocument.objects.create(
+                user=user,
+                document_type=cv_doc_type,
+                file=cv_file,
+                extracted_content=cv_text
+            )
+            
+            # Trigger AI Analysis for CV if text exists
+            if cv_text:
+                cv_analysis_result = AIService.analyze_cv(cv_text)
+                if cv_analysis_result:
+                    try:
+                        from users.models import CVAnalysis
+                        CVAnalysis.objects.create(
+                            user_document=cv_doc,
+                            total_score=cv_analysis_result.get('total_score', 0),
+                            professionalism_score=cv_analysis_result.get('professionalism_score', 0),
+                            relevance_score=cv_analysis_result.get('relevance_score', 0),
+                            experience_score=cv_analysis_result.get('experience_score', 0),
+                            education_score=cv_analysis_result.get('education_score', 0),
+                            missing_sections=json.dumps(cv_analysis_result.get('missing_sections', [])),
+                            improvement_suggestions=json.dumps(cv_analysis_result.get('improvement_suggestions', [])),
+                            raw_json_response=cv_analysis_result
+                        )
+                    except Exception as e:
+                        print(f"Failed to save CV Analysis: {e}")
+
+            # --- Application Creation ---
+            application = Application.objects.create(
+                user=user,
+                job=job,
+                status='Under Review',
+                cv_used=cv_doc
+            )
+            
+            # --- Cover Letter Handling ---
+            cl_doc_type, _ = DocumentType.objects.get_or_create(name='Cover Letter')
+            cl_doc = None
+            cl_analysis_text = ""
+            
+            if cl_text:
+                application.cover_letter_text = cl_text
+                cl_analysis_text = cl_text
+                
+                cl_doc = UserDocument.objects.create(
+                    user=user,
+                    document_type=cl_doc_type,
+                    extracted_content=cl_text
+                )
+                # Save generated file
+                filename = f"public_cl_{user.id}_{job.id}.pdf"
+                content = DocumentGenerator.get_document_content(cl_text, 'pdf')
+                cl_doc.file.save(filename, ContentFile(content))
+                
+                application.cover_letter_document = cl_doc
+                application.cover_letter = cl_doc.file 
+                application.save()
+                
+            elif cl_file:
+                application.cover_letter = cl_file
+                cl_analysis_text = DocumentGenerator.extract_text_from_file(cl_file)
+                
+                cl_doc = UserDocument.objects.create(
+                    user=user,
+                    document_type=cl_doc_type,
+                    file=cl_file,
+                    extracted_content=cl_analysis_text
+                )
+                application.cover_letter_document = cl_doc
+                application.save()
+                
+            # Trigger AI Analysis for Cover Letter
+            if cl_analysis_text and cl_doc:
+                cl_analysis_result = AIService.analyze_cover_letter(cl_analysis_text)
+                if cl_analysis_result:
+                    try:
+                        CoverLetterAnalysis.objects.create(
+                            user_document=cl_doc,
+                            total_score=cl_analysis_result.get('total_score', 0),
+                            professionalism_score=cl_analysis_result.get('professionalism_score', 0),
+                            content_score=cl_analysis_result.get('content_score', 0),
+                            tone_score=cl_analysis_result.get('tone_score', 0),
+                            impact_score=cl_analysis_result.get('impact_score', 0),
+                            missing_elements=json.dumps(cl_analysis_result.get('missing_elements', [])),
+                            raw_json_response=cl_analysis_result
+                        )
+                    except Exception as e:
+                        print(f"Failed to save CL Analysis: {e}")
+
+            # --- Final Redirection Logic ---
+            if is_new_user:
+                # Login the user and redirect to applications
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend') # Force login
+                messages.success(request, f"Application submitted! Account created. Your password is your phone number: {phone}")
+                return redirect('application_list')
+            else:
+                # Redirect to login with message
+                # We can't auto-login existing user for security without password
+                messages.success(request, "Application submitted successfully! Please log in to view its status.")
+                return redirect('account_login')
+
+    else:
+        form = PublicApplicationForm()
+        
+    return render(request, 'jobs/public_application.html', {'form': form, 'job': job})
 
 def job_detail(request, pk):
     job = get_object_or_404(JobListing, pk=pk)
@@ -383,10 +614,19 @@ def job_analytics(request, pk):
     total_applicants = all_applications.count()
     
     # Filtering for the table
-    applications = job.applications.select_related('user', 'user__profile', 'cv_used')
+    # Optimized query to fetch user, profile, cv, and cover letter analysis
+    applications = job.applications.select_related(
+        'user', 
+        'user__profile', 
+        'cv_used', 
+        'cover_letter_document',
+        'cover_letter_document__cl_analysis'
+    )
     
     search_query = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
+    cv_min = request.GET.get('cv_min', '')
+    cl_min = request.GET.get('cl_min', '')
     
     if search_query:
         applications = applications.filter(
@@ -397,10 +637,32 @@ def job_analytics(request, pk):
     if status_filter:
         applications = applications.filter(status=status_filter)
 
+    # Score Filtering
+    if cv_min:
+        try:
+            cv_min_val = int(cv_min)
+            applications = applications.filter(cv_used__ai_score__gte=cv_min_val)
+        except (ValueError, TypeError):
+            pass
+
+    if cl_min:
+        try:
+            cl_min_val = int(cl_min)
+            applications = applications.filter(cover_letter_document__cl_analysis__total_score__gte=cl_min_val)
+        except (ValueError, TypeError):
+            pass
+
     applications = applications.order_by(F('cv_used__ai_score').desc(nulls_last=True), '-applied_at')
     
     # AI Score Metrics
     avg_ai_score = all_applications.aggregate(avg=Avg('cv_used__ai_score'))['avg'] or 0
+    
+    # Cover Letter Score Metrics
+    # We need to compute this manually or via simpler aggregation if possible
+    # Note: 'cover_letter_document__cl_analysis__total_score' might span tables, so using aggregate with valid relation traversal
+    avg_cl_score = all_applications.filter(cover_letter_document__cl_analysis__isnull=False).aggregate(
+        avg=Avg('cover_letter_document__cl_analysis__total_score')
+    )['avg'] or 0
     
     # Prepare status distribution with percentages
     stats = []
@@ -428,9 +690,12 @@ def job_analytics(request, pk):
         'applications': applications,
         'total_applicants': total_applicants,
         'avg_ai_score': round(avg_ai_score, 1),
+        'avg_cl_score': round(avg_cl_score, 1),
         'stats': stats,
         'search_query': search_query,
         'status_filter': status_filter,
+        'cv_min': cv_min,
+        'cl_min': cl_min,
         'status_choices': status_choices,
     }
     return render(request, 'jobs/job_analytics.html', context)

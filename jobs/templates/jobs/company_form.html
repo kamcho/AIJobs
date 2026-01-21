@@ -1,93 +1,329 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ title }} - FindAJob.ai{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-wrapper {
+        padding: 40px 20px;
+        min-height: 80vh;
+    }
+
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+        text-align: center;
+    }
+
+    .page-header h1 {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .form-section {
+        margin-bottom: 40px;
+        padding-bottom: 32px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .form-label span.required {
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    /* File Input Styling */
+    .file-upload-wrapper {
+        position: relative;
+        padding: 32px;
+        border: 2px dashed var(--border-color);
+        border-radius: 16px;
+        text-align: center;
+        transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.01);
+    }
+
+    .file-upload-wrapper:hover {
+        border-color: var(--primary);
+        background: rgba(59, 130, 246, 0.02);
+    }
+
+    .file-upload-wrapper input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+        color: var(--text-muted);
+    }
+
+    .action-bar {
+        margin-top: 40px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-cancel {
+        padding: 12px 24px;
+        border-radius: 12px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .current-logo {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }
+
+    .error-msg {
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-top: 6px;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-container {
+            padding: 24px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="mb-0">{{ title }}</h2>
+<div class="page-wrapper">
+    <div class="form-container">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+            <p>Create a comprehensive profile for your organization to attract the best talent.</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Company Overview -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🏢</div>
+                    <span>Company Overview</span>
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.name.id_for_label }}" class="form-label">
-                                    Company Name <span class="text-danger">*</span>
-                                </label>
-                                {{ form.name }}
-                                {% if form.name.errors %}
-                                    <div class="text-danger">{{ form.name.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.website.id_for_label }}" class="form-label">Website</label>
-                                {{ form.website }}
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
-                            {{ form.description }}
-                        </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Company Name <span class="required">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="error-msg">{{ form.name.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
-                                {{ form.location }}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.founded_in.id_for_label }}" class="form-label">Founded In</label>
-                                {{ form.founded_in }}
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Website URL</label>
+                        {{ form.website }}
+                    </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.primary_phone.id_for_label }}" class="form-label">Primary Phone</label>
-                                {{ form.primary_phone }}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.primary_email.id_for_label }}" class="form-label">Primary Email</label>
-                                {{ form.primary_email }}
-                            </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                            Briefly describe your company culture, mission, and what you do.
                         </div>
+                    </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.secondary_phone.id_for_label }}" class="form-label">Secondary Phone</label>
-                                {{ form.secondary_phone }}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.secondary_email.id_for_label }}" class="form-label">Secondary Email</label>
-                                {{ form.secondary_email }}
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Headquarters Location</label>
+                        {{ form.location }}
+                    </div>
 
-                        <div class="mb-4">
-                            <label for="{{ form.logo.id_for_label }}" class="form-label">Company Logo</label>
-                            {{ form.logo }}
-                            {% if form.instance.logo %}
-                                <div class="mt-2">
-                                    <img src="{{ form.instance.logo.url }}" alt="{{ form.instance.name }} logo" style="max-height: 100px;">
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-1"></i> Back to List
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i> Save Company
-                            </button>
-                        </div>
-                    </form>
+                    <div class="form-group">
+                        <label class="form-label">Founded Year</label>
+                        {{ form.founded_in }}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Contact Information -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">📞</div>
+                    <span>Contact Details</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Primary Email</label>
+                        {{ form.primary_email }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Primary Phone</label>
+                        {{ form.primary_phone }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Secondary Email</label>
+                        {{ form.secondary_email }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Secondary Phone</label>
+                        {{ form.secondary_phone }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branding -->
+            <div class="form-section">
+                <div class="section-title">
+                    <div class="section-icon">🎨</div>
+                    <span>Branding</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Company Logo</label>
+                    <div class="file-upload-wrapper">
+                        <div class="file-icon">📁</div>
+                        <div style="font-weight: 500; margin-bottom: 4px;">Click to upload logo</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">SVG, PNG, JPG (Max 2MB)</div>
+                        {{ form.logo }}
+                    </div>
+                    {% if form.instance.logo %}
+                    <div class="current-logo">
+                        <img src="{{ form.instance.logo.url }}" alt="Current Logo"
+                            style="width: 40px; height: 40px; object-fit: contain; background: white; border-radius: 4px; padding: 2px;">
+                        <div>
+                            <div style="font-size: 0.9rem; font-weight: 500;">Current Logo</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">This file is currently uploaded
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <a href="{% url 'dashboard' %}" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-primary"
+                    style="padding: 12px 32px; border-radius: 12px; font-weight: 600;">
+                    Save Company
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

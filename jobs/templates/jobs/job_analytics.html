@@ -402,6 +402,50 @@
         </div>
     </div>
 
+    <!-- Public Application Link Card -->
+    <div
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 32px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px;">
+        <div>
+            <h3 style="font-size: 1rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <span>🌐</span> Public Application Link
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Share this link with candidates to let
+                them apply directly without signing up first.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex: 1; max-width: 600px; align-items: center;">
+            <div
+                style="flex: 1; background: rgba(0,0,0,0.2); padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-family: monospace; color: var(--primary-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ request.scheme }}://{{ request.get_host }}{% url 'public_job_application' job.pk %}
+            </div>
+            <button
+                onclick="copyLink('{{ request.scheme }}://{{ request.get_host }}{% url 'public_job_application' job.pk %}')"
+                id="copy-btn" class="btn-action"
+                style="backgound: var(--primary); color: white; border-color: var(--primary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <span>📋</span> Copy
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function copyLink(text) {
+            navigator.clipboard.writeText(text).then(function () {
+                const btn = document.getElementById('copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span>✅</span> Copied!';
+                btn.style.background = '#10b981';
+                btn.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                }, 2000);
+            }, function (err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+
     <!-- Metrics Cards -->
     <div class="metrics-grid">
         <div class="metric-card">
@@ -409,9 +453,15 @@
             <div class="metric-value">{{ total_applicants }}</div>
         </div>
         <div class="metric-card">
-            <span class="metric-label">Avg AI Match</span>
+            <span class="metric-label">Avg CV Score</span>
             <div class="metric-value">
                 {{ avg_ai_score }}<span style="font-size: 1.25rem; font-weight: 600;">%</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Avg Cover Letter</span>
+            <div class="metric-value">
+                {{ avg_cl_score }}<span style="font-size: 1.25rem; font-weight: 600;">%</span>
             </div>
         </div>
         <div class="metric-card">
@@ -424,8 +474,7 @@
             <span class="metric-label">Conversion Rate</span>
             <div class="metric-value">
                 {% if total_applicants > 0 %}
-                {{ stats.3.count|add:0 }}<span style="font-size: 1.25rem; font-weight: 600;">/{{ total_applicants
-                    }}</span>
+                {{ stats.3.count|add:0 }}<span style="font-size: 1.25rem; font-weight: 600;">/{{ total_applicants }}</span>
                 {% else %}
                 0
                 {% endif %}
@@ -462,8 +511,7 @@
             <div
                 style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 16px; padding: 24px;">
                 <p style="color: var(--text-main); font-size: 1rem; line-height: 1.7; margin: 0;">
-                    The average AI match for this role is <strong style="color: var(--primary-light);">{{ avg_ai_score
-                        }}%</strong>.
+         The average CV Score for this role is <strong style="color: var(--primary-light);">{{ avg_ai_score }}%</strong>.
                     <br><br>
                     {% if avg_ai_score >= 75 %}
                     🚀 <strong>Excellent Alignment:</strong> Your job description is attracting highly relevant talent.
@@ -515,11 +563,18 @@
                     {% endfor %}
                 </select>
 
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="number" name="cv_min" value="{{ cv_min }}" placeholder="Min CV" min="0" max="100"
+                        class="form-input" style="width: 100px; padding-left: 12px;">
+                    <input type="number" name="cl_min" value="{{ cl_min }}" placeholder="Min CL" min="0" max="100"
+                        class="form-input" style="width: 100px; padding-left: 12px;">
+                </div>
+
 
                 <button type="submit" class="btn-primary"
                     style="padding: 10px 24px; border-radius: 12px; height: 46px; font-weight: 600;">Filter</button>
 
-                {% if search_query or status_filter %}
+                {% if search_query or status_filter or cv_min or cl_min %}
                 <a href="{% url 'job_analytics' job.pk %}#applicant-pool" class="clear-filter-btn">
                     <span>✕</span> Clear
                 </a>
@@ -536,7 +591,8 @@
                             </label>
                         </th>
                         <th>Candidate</th>
-                        <th>AI Match</th>
+                        <th>CV</th>
+                        <th>Cover Letter</th>
                         <th>Status</th>
                         <th>Date Applied</th>
                         <th>Actions</th>
@@ -551,7 +607,8 @@
                             </label>
                         </td>
                         <td>
-                            <div style="font-weight: 600; font-size: 1rem;">{{app.user.profile.full_name|default:app.user.email }}</div>
+                            <div style="font-weight: 600; font-size: 1rem;">
+                                {{app.user.profile.full_name|default:app.user.email }}</div>
                             <div style="font-size: 0.8rem; color: var(--text-muted);">{{ app.user.email }}</div>
                         </td>
                         <td>
@@ -560,6 +617,19 @@
                                 <div
                                     style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid {% if app.cv_used.ai_score >= 80 %}var(--success){% elif app.cv_used.ai_score >= 60 %}#f59e0b{% else %}#ef4444{% endif %}; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800;">
                                     {{ app.cv_used.ai_score }}
+                                </div>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Score</span>
+                            </div>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if app.cover_letter_document and app.cover_letter_document.cl_analysis %}
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div
+                                    style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid {% if app.cover_letter_document.cl_analysis.total_score >= 80 %}var(--success){% elif app.cover_letter_document.cl_analysis.total_score >= 60 %}#f59e0b{% else %}#ef4444{% endif %}; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800;">
+                                    {{ app.cover_letter_document.cl_analysis.total_score }}
                                 </div>
                                 <span style="font-size: 0.85rem; color: var(--text-muted);">Score</span>
                             </div>

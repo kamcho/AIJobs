@@ -130,26 +130,29 @@ class EmailService:
    {job.application_url or job.url}"""
             target_label = "APPLICATION PAGE"
 
-        subject = f"[ACTION REQUIRED] Your Application Materials for {job.title}"
-        body = f"""Hello {user.profile.full_name or user.email},
+        subject = f"Application Materials for {job.title} - Submission Required"
+        body = f"""Hello {user.profile.full_name or "Applicant"},
 
-Your AI-powered application for "{job.title}" at {company_name or 'the company'} has been prepared!
+Your application materials for "{job.title}" at {company_name or 'the company'} have been successfully generated.
 
-### NEXT STEPS: {action_title} ###
+*** IMPORTANT: THIS EMAIL WAS SENT TO YOU (THE APPLICANT) ***
+
+To complete your application, please follow the instructions below based on the application method:
+
+### INSTRUCTIONS: {action_title} ###
 
 {next_steps}
 
 {target_label}: {target}
 
 --------------------------------------------------
-APPLICATION SUMMARY:
-- Position: {job.title}
-- Company: {company_name or 'Not specified'}
-- Attachments: Cover Letter and CV are ready for use.
+ATTACHMENTS INCLUDED:
+1. Cover Letter (Generated/Uploaded)
+2. CV (Selected)
 --------------------------------------------------
 
-Best regards,
-FindAJob.ai Application System"""
+Good luck!
+FindAJob.ai Team"""
         
         email = EmailMessage(
             subject,

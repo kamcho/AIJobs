@@ -344,6 +344,59 @@
                         <a href="{{ application.cover_letter.url }}" class="btn-download" target="_blank">Download</a>
                     </div>
                 </div>
+
+                {% if user.role != 'Job Seeker' and application.cover_letter_document.cl_analysis %}
+                <div
+                    style="margin-top: 24px; padding: 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 16px;">
+                    <h3
+                        style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <span>✨</span> Cover Letter Analysis
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Content
+                                Score</span>
+                            <div
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: {{ application.cover_letter_document.cl_analysis.content_pct }}%; height: 100%; background: var(--primary);">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Professionalism</span>
+                            <div
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: {{ application.cover_letter_document.cl_analysis.professionalism_pct }}%; height: 100%; background: #10b981;">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Tone</span>
+                            <div
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: {{ application.cover_letter_document.cl_analysis.tone_pct }}%; height: 100%; background: #f59e0b;">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Impact</span>
+                            <div
+                                style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                <div
+                                    style="width: {{ application.cover_letter_document.cl_analysis.impact_pct }}%; height: 100%; background: #8b5cf6;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 {% endif %}
             </div>
 

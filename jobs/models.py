@@ -133,6 +133,15 @@ class Application(models.Model):
     cv_used = models.ForeignKey('users.UserDocument', on_delete=models.SET_NULL, null=True, blank=True)
     cover_letter = models.FileField(upload_to='cover_letters/', blank=True, null=True)
     cover_letter_text = models.TextField(blank=True, null=True)
+    
+    # New field to link to UserDocument with analysis
+    cover_letter_document = models.ForeignKey(
+        'users.UserDocument', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='application_cover_letters'
+    )
 
     def __str__(self):
         return f"{self.user} - {self.job}"

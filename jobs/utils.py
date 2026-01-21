@@ -120,3 +120,58 @@ class DocumentGenerator:
             return DocumentGenerator.generate_docx(text)
         else:
             return DocumentGenerator.generate_pdf(text)
+
+    @staticmethod
+    def extract_text_from_file(uploaded_file):
+        """
+        Extracts text from an uploaded PDF or DOCX file.
+        Returns the extracted text string.
+        """
+        try:
+            filename = uploaded_file.name.lower()
+            if filename.endswith('.docx'):
+                return DocumentGenerator._extract_from_docx(uploaded_file)
+            elif filename.endswith('.pdf'):
+                return DocumentGenerator._extract_from_pdf(uploaded_file)
+            else:
+                return ""
+        except Exception as e:
+            print(f"Error extracting text: {e}")
+            return ""
+
+    @staticmethod
+    def _extract_from_docx(file):
+        try:
+            doc = Document(file)
+            full_text = []
+            for para in doc.paragraphs:
+                full_text.append(para.text)
+            return '\n'.join(full_text)
+        except Exception as e:
+            print(f"DOCX Extraction Error: {e}")
+            return ""
+
+    @staticmethod
+    def _extract_from_pdf(file):
+        try:
+            from pypdf import PdfReader
+            reader = PdfReader(file)
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() + "\n"
+            return text
+        except ImportError:
+            # Fallback to PyPDF2 if pypdf is not available
+            try:
+                import PyPDF2
+                reader = PyPDF2.PdfReader(file)
+                text = ""
+                for page in reader.pages:
+                    text += page.extract_text() + "\n"
+                return text
+            except Exception as e:
+                print(f"PDF Extraction Error (PyPDF2): {e}")
+                return ""
+        except Exception as e:
+            print(f"PDF Extraction Error: {e}")
+            return ""

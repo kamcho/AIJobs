@@ -27,6 +27,12 @@ class ApplicationForm(forms.ModelForm):
         label="Choose your preferred file format"
     )
 
+    cover_letter_file = forms.FileField(
+        required=False, 
+        label="Upload Cover Letter (PDF/DOCX)",
+        widget=forms.ClearableFileInput(attrs={'class': 'form-input', 'accept': '.pdf,.doc,.docx'})
+    )
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -36,6 +42,16 @@ class ApplicationForm(forms.ModelForm):
                 user=user, 
                 document_type__name='CV'
             )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        text = cleaned_data.get('cover_letter_text')
+        file = cleaned_data.get('cover_letter_file')
+
+        if not text and not file:
+            raise forms.ValidationError("Please either generate a cover letter or upload a file.")
+        
+        return cleaned_data
 
 class JobListingForm(forms.ModelForm):
     class Meta:
@@ -105,3 +121,44 @@ class CompanyForm(forms.ModelForm):
         for field in self.fields:
             if field != 'description' and field != 'logo':
                 self.fields[field].widget.attrs.update({'class': 'form-input'})
+
+class PublicApplicationForm(forms.Form):
+    full_name = forms.CharField(
+        label="Full Name", 
+        max_length=255, 
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. John Doe'})
+    )
+    email = forms.EmailField(
+        label="Email Address", 
+        widget=forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'e.g. john@example.com'})
+    )
+    phone = forms.CharField(
+        label="Phone Number", 
+        max_length=20, 
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. +1234567890'})
+    )
+    cv_file = forms.FileField(
+        label="Upload CV (PDF/DOCX)",
+        widget=forms.ClearableFileInput(attrs={'class': 'form-input', 'accept': '.pdf,.doc,.docx'})
+    )
+    cover_letter_text = forms.CharField(
+        label="Cover Letter",
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-input', 'rows': 8, 'placeholder': 'Explain why you are a good fit...'})
+    )
+    cover_letter_file = forms.FileField(
+        required=False, 
+        label="Or Upload Cover Letter File",
+        widget=forms.ClearableFileInput(attrs={'class': 'form-input', 'accept': '.pdf,.doc,.docx'})
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        text = cleaned_data.get('cover_letter_text')
+        file = cleaned_data.get('cover_letter_file')
+        if not text and not file:
+             # It's okay to be optional if that's the requirement, but usually one is needed.
+             # User prompt said "ask for ... cover letter", implying it's needed.
+             # Let's make at least one required.
+             raise forms.ValidationError("Please provide a cover letter (text or file).")
+        return cleaned_data
